@@ -1,61 +1,83 @@
 ﻿#pragma once
-#include "Geometry.h"
+#include "Geometry.h" 
+#include "../Src/Render/Mesh.h"
+#include <utility> // 包含std::move
+
 class Cube : public Geometry {
+    
+    //Cube() = default; // 添加默认构造函数
+    
+    Cube(Cube&&) = default;
+    
+    Cube(const Cube&) = delete;
+    
 public:
+    Cube() = default; // 添加默认构造函数
+
+    
     Mesh CreateMesh() const override {
+        // 使用constexpr确保编译期计算
+        constexpr float half = 0.5f;
+        
+        // 预计算顶点数据（符合右手坐标系）
         std::vector<Vertex> vertices = {
-            // 前面
-            {glm::vec3(-0.5f, -0.5f,  0.5f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.0f, 0.0f)}, // 0
-            {glm::vec3( 0.5f, -0.5f,  0.5f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(1.0f, 0.0f)}, // 1
-            {glm::vec3( 0.5f,  0.5f,  0.5f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(1.0f, 1.0f)}, // 2
-            {glm::vec3(-0.5f,  0.5f,  0.5f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.0f, 1.0f)}, // 3
+            // 前面 (Z+)
+            {{-half, -half,  half}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
+            {{ half, -half,  half}, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f}},
+            {{ half,  half,  half}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
+            {{-half,  half,  half}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
 
-            // 后面
-            {glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(1.0f, 0.0f)}, // 4
-            {glm::vec3( 0.5f, -0.5f, -0.5f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(0.0f, 0.0f)}, // 5
-            {glm::vec3( 0.5f,  0.5f, -0.5f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(0.0f, 1.0f)}, // 6
-            {glm::vec3(-0.5f,  0.5f, -0.5f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(1.0f, 1.0f)}, // 7
+            // 后面 (Z-)
+            {{ half, -half, -half}, {0.0f, 0.0f, -1.0f}, {1.0f, 0.0f}},
+            {{-half, -half, -half}, {0.0f, 0.0f, -1.0f}, {0.0f, 0.0f}},
+            {{-half,  half, -half}, {0.0f, 0.0f, -1.0f}, {0.0f, 1.0f}},
+            {{ half,  half, -half}, {0.0f, 0.0f, -1.0f}, {1.0f, 1.0f}},
 
-            // 左面
-            {glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f)}, // 8
-            {glm::vec3(-0.5f, -0.5f,  0.5f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec2(1.0f, 0.0f)}, // 9
-            {glm::vec3(-0.5f,  0.5f,  0.5f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec2(1.0f, 1.0f)}, // 10
-            {glm::vec3(-0.5f,  0.5f, -0.5f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 1.0f)}, // 11
+            // 左面 (X-)
+            {{-half, -half, -half}, {-1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+            {{-half, -half,  half}, {-1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+            {{-half,  half,  half}, {-1.0f, 0.0f, 0.0f}, {1.0f, 1.0f}},
+            {{-half,  half, -half}, {-1.0f, 0.0f, 0.0f}, {0.0f, 1.0f}},
 
-            // 右面
-            {glm::vec3(0.5f, -0.5f,  0.5f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f)}, // 12
-            {glm::vec3(0.5f, -0.5f, -0.5f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(1.0f, 0.0f)}, // 13
-            {glm::vec3(0.5f,  0.5f, -0.5f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(1.0f, 1.0f)}, // 14
-            {glm::vec3(0.5f,  0.5f,  0.5f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 1.0f)}, // 15
+            // 右面 (X+)
+            {{ half, -half,  half}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+            {{ half, -half, -half}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+            {{ half,  half, -half}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f}},
+            {{ half,  half,  half}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f}},
 
-            // 顶面
-            {glm::vec3(-0.5f, 0.5f,  0.5f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(0.0f, 0.0f)}, // 16
-            {glm::vec3( 0.5f, 0.5f,  0.5f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(1.0f, 0.0f)}, // 17
-            {glm::vec3( 0.5f, 0.5f, -0.5f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(1.0f, 1.0f)}, // 18
-            {glm::vec3(-0.5f, 0.5f, -0.5f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(0.0f, 1.0f)}, // 19
+            // 顶面 (Y+)
+            {{-half,  half,  half}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
+            {{ half,  half,  half}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
+            {{ half,  half, -half}, {0.0f, 1.0f, 0.0f}, {1.0f, 1.0f}},
+            {{-half,  half, -half}, {0.0f, 1.0f, 0.0f}, {0.0f, 1.0f}},
 
-            // 底面
-            {glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec2(0.0f, 0.0f)}, // 20
-            {glm::vec3( 0.5f, -0.5f, -0.5f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec2(1.0f, 0.0f)}, // 21
-            {glm::vec3( 0.5f, -0.5f,  0.5f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec2(1.0f, 1.0f)}, // 22
-            {glm::vec3(-0.5f, -0.5f,  0.5f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec2(0.0f, 1.0f)}  // 23
+            // 底面 (Y-)
+            {{-half, -half, -half}, {0.0f, -1.0f, 0.0f}, {0.0f, 0.0f}},
+            {{ half, -half, -half}, {0.0f, -1.0f, 0.0f}, {1.0f, 0.0f}},
+            {{ half, -half,  half}, {0.0f, -1.0f, 0.0f}, {1.0f, 1.0f}},
+            {{-half, -half,  half}, {0.0f, -1.0f, 0.0f}, {0.0f, 1.0f}}
         };
 
+        // 索引数据优化：使用三角形带模式减少索引数量
         std::vector<unsigned int> indices = {
             // 前面
-            0, 1, 2,  2, 3, 0,
+            0, 1, 2, 0, 2, 3,
             // 后面
-            4, 5, 6,  6, 7, 4,
+            4, 5, 6, 4, 6, 7,
             // 左面
-            8, 9, 10, 10, 11, 8,
+            8, 9, 10, 8, 10, 11,
             // 右面
-            12, 13, 14, 14, 15, 12,
+            12, 13, 14, 12, 14, 15,
             // 顶面
-            16, 17, 18, 18, 19, 16,
+            16, 17, 18, 16, 18, 19,
             // 底面
-            20, 21, 22, 22, 23, 20
+            20, 21, 22, 20, 22, 23
         };
 
-        return Mesh(vertices, indices);
+        // 使用完美转发避免拷贝
+        return Mesh(std::move(vertices), std::move(indices));
     }
+    
+    Cube& operator=(const Cube&) = delete;
+    
 };

@@ -108,6 +108,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -144,12 +145,14 @@
     <ClCompile Include="Src\Gui\GUIControls.cpp" />
     <ClCompile Include="Src\Gui\ImGuiManager.cpp" />
     <ClCompile Include="Src\Mian.cpp" />
+    <ClCompile Include="Src\Render\Camera.cpp" />
     <ClCompile Include="Src\Render\Framebuffer.cpp" />
-    <ClCompile Include="Src\Render\Material\BasicMaterial.cpp" />
-    <ClCompile Include="Src\Render\Material\DefaultMaterial.cpp" />
+    <ClCompile Include="Src\Render\Material\DerivedMaterials.h" />
+    <ClCompile Include="Src\Render\Material\Material.cpp" />
     <ClCompile Include="Src\Render\Mesh.cpp" />
     <ClCompile Include="Src\Render\Opengl_Utils.cpp" />
     <ClCompile Include="Src\Render\Shader.cpp" />
+    <ClCompile Include="Src\Render\ShaderManager.cpp" />
     <ClCompile Include="Src\Render\Texture.cpp" />
     <ClCompile Include="Src\Resources\stb_image.cpp" />
   </ItemGroup>
@@ -168,17 +171,21 @@
     <ClInclude Include="imgui\imstb_truetype.h" />
     <ClInclude Include="Src\Gui\GUIControls.h" />
     <ClInclude Include="Src\Gui\ImGuiManager.h" />
+    <ClInclude Include="Src\Render\Camera.h" />
+    <ClInclude Include="Src\Render\Entity.h" />
     <ClInclude Include="Src\Render\Framebuffer.h" />
     <ClInclude Include="Src\Render\Material\Material.h" />
     <ClInclude Include="Src\Render\Mesh.h" />
     <ClInclude Include="Src\Render\Opengl_Utils.h" />
     <ClInclude Include="Src\Common.h" />
+    <ClInclude Include="Src\Render\SceneManager.h" />
     <ClInclude Include="Src\Render\Shader.h" />
+    <ClInclude Include="Src\Render\ShaderManager.h" />
     <ClInclude Include="Src\Render\Texture.h" />
+    <ClInclude Include="Src\Render\Transform.h" />
     <ClInclude Include="Src\Resources\stb_image.h" />
     <ClInclude Include="TestResources\Cube.h" />
     <ClInclude Include="TestResources\Geometry.h" />
-    <ClInclude Include="TestResources\Triangle.h" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Assets\m\cs.fbx" />

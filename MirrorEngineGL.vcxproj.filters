@@ -42,25 +42,43 @@
     <ClCompile Include="imgui\imgui_widgets.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="Src\Gui\gui.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="Src\Render\opengl_utils.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="Src\Render\shader.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="Src\Core\InputManager.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="Src\Resources\stb_image.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="Src\Resources\textureLoader.cpp">
+    <ClCompile Include="imgui\ImGuiFileDialog.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="imgui\ImGuiFileDialog.cpp">
+    <ClCompile Include="Src\Gui\GUIControls.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Gui\ImGuiManager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Render\Camera.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Render\Framebuffer.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Render\Material\DerivedMaterials.h">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Render\Material\Material.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Render\Mesh.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Render\Texture.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Render\ShaderManager.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -92,9 +110,6 @@
     <ClInclude Include="imgui\imstb_truetype.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Src\Gui\gui.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="Src\Render\opengl_utils.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -107,22 +122,7 @@
     <ClInclude Include="Src\Common.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Src\Utils\matrix_utils.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Src\Core\InputManager.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Src\Resources\ModelLoader.h.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Src\Tool\MatrixManager.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="Src\Resources\stb_image.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Src\Resources\textureLoader.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="imgui\ImGuiFileDialog.h">
@@ -134,7 +134,40 @@
     <ClInclude Include="imgui\dirent.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Src\Render\mesh_render.h">
+    <ClInclude Include="Src\Gui\GUIControls.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Gui\ImGuiManager.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Render\Entity.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Render\Framebuffer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Render\Material\Material.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Render\Mesh.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Render\SceneManager.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Render\Texture.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Render\Transform.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="TestResources\Cube.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="TestResources\Geometry.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Render\ShaderManager.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

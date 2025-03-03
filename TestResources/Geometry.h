@@ -5,5 +5,5 @@
 class Geometry {
 public:
     virtual ~Geometry() = default;
-    virtual Mesh CreateMesh() const = 0;
+    virtual Mesh CreateMesh() const = 0; // 纯虚函数
 };

@@ -24,19 +24,27 @@ class Texture {
 public:
     Texture() = default;
     
-    // 构造函数（延迟加载）
+    // 禁用拷贝
+    Texture(const Texture&) = delete;
+    Texture& operator=(const Texture&) = delete;
+
+    // 移动语义支持
+    Texture(Texture&& other) noexcept;
+    Texture& operator=(Texture&& other) noexcept;
+
+    // 带参数的构造函数（延迟加载）
     Texture(const std::string& path, TextureLabel label, TextureType type);
     
-    // 构造函数（立即加载）
-    static Texture Load(const std::string& path, TextureLabel label, TextureType type);
+    // 静态加载方法（返回const引用）
+    static const Texture& Load(const std::string& path, 
+                              TextureLabel label = TextureLabel::BaseColor,
+                              TextureType type = TextureType::RGB);
     
-    // 析构函数
     ~Texture();
     
-    // 绑定纹理到指定纹理单元
     void Bind(unsigned int unit = 0) const;
+    bool IsValid() const { return textureID != 0; }
     
-    // 属性访问
     GLuint GetID() const { return textureID; }
     int GetWidth() const { return width; }
     int GetHeight() const { return height; }
@@ -44,22 +52,19 @@ public:
     TextureType GetType() const { return type; }
     const std::string& GetPath() const { return path; }
 
-    // 静态纹理管理器
     static const Texture& Get(const std::string& path);
     static void ClearCache();
 
 private:
-    GLuint textureID;
-    std::string name;
+    GLuint textureID = 0;
     TextureLabel label;
     TextureType type;
     std::string path;
-    int width;
-    int height;
+    int width = 0;
+    int height = 0;
     
-    // 私有加载方法
     void LoadFromFile();
-    
-    // 纹理缓存
+    void Release();
+
     static std::unordered_map<std::string, Texture> textureCache;
 };
