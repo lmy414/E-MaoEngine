@@ -10,6 +10,12 @@ public:
         entities.push_back(entity);
     }
 
+    // 安全获取第一个实体（需null检查）
+    std::shared_ptr<Entity> GetFirstEntity() const {
+        return entities.empty() ? nullptr : entities.front();
+    }
+
+
     void RenderScene(const glm::mat4& view, const glm::mat4& projection) {
         // 计算公共矩阵
         //const glm::mat4 viewProj = projection * view;

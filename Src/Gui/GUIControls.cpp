@@ -9,6 +9,35 @@ void GUIControls::Render() {
     ImGui::ColorEdit3("Clear Color", &clearColor[0]);
     
     ImGui::End();
+    ImGui::Begin("Model Transform");
+    
+    if (auto entity = targetEntity.lock()) {
+        // 位置控制
+        ImGui::SeparatorText("Position");
+        ImGui::PushItemWidth(120);
+        if (ImGui::DragFloat3("##pos", &modelPosition.x, 0.1f)) {
+            entity->transform->position = modelPosition;
+            entity->transform->MarkDirty();
+        }
+        // 旋转控制（使用Degrees）
+        ImGui::SeparatorText("Rotation");
+        if (ImGui::DragFloat3("##rot", &modelRotation.x, 1.0f, -180, 180)) {
+            // 转四元数时需要把角度转成弧度
+            glm::quat rot = glm::quat(glm::radians(modelRotation));
+            entity->transform->rotation = rot;
+            entity->transform->MarkDirty();
+        }
+        // 缩放控制（依需求添加）
+        // glm::vec3 scale = entity->transform->scale;
+        // if (ImGui::DragFloat3("Scale", &scale.x, 0.1f)) {
+        //     entity->transform->scale = scale;
+        //     entity->transform->MarkDirty();
+        // }
+    } else {
+        ImGui::TextColored(ImVec4(1,0.3,0.3,1), "没有选择模型!");
+    }
+    
+    ImGui::End();
 
     // 帧缓冲显示窗口
     if(framebufferTexture != 0) {

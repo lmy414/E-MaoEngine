@@ -1,24 +1,46 @@
 ﻿#include "Common.h"
+#include "../imgui/dirent.h"
 #include"Render/Camera.h"
+#include"../TestResources/OBJLoader.h"
+#include "../Src/Render/CameraController.h"
 
 // 场景初始化函数
 SceneManager InitScene() {
     SceneManager scene;
-    // 创建立方体
-    auto cubeEntity = std::make_shared<Entity>();
-    cubeEntity->mesh = std::make_shared<Mesh>(Cube().CreateMesh());
-    cubeEntity->material = std::make_shared<DefaultMaterial>();
-    
-    // 设置初始变换
-    cubeEntity->transform->position = {0.0f, 0.0f, 0.0f};
-    cubeEntity->transform->MarkDirty();
+    try {
+        // 加载OBJ模型（代替原来的立方体）
+        auto modelEntity = std::make_shared<Entity>();
+        
+        // 使用OBJLoader加载模型
+        Mesh objMesh = OBJLoader::LoadFromFile("E:/MirrorEngine/MirrorEngine2/Assets/m/011obj.obj");
+        
+        // 通过移动语义创建网格
+        modelEntity->mesh = std::make_shared<Mesh>(std::move(objMesh));
+        
+        // 应用默认材质
+        modelEntity->material = std::make_shared<DefaultMaterial>();
+        
+        // 设置模型变换
+        modelEntity->transform->position = {0.0f, -1.0f, 0.0f}; // Y向下移动1单位
+        modelEntity->transform->scale = {0.5f, 0.5f, 0.5f};     // 缩放调整模型大小
+        modelEntity->transform->MarkDirty();
 
-    scene.AddEntity(cubeEntity);
+        scene.AddEntity(modelEntity);
+    }
+    catch (const std::exception& e) {
+        std::cerr << "初始化场景失败: " << e.what() << std::endl;
+        // 可在此创建默认立方体作为fallback
+        auto fallbackCube = std::make_shared<Entity>();
+        fallbackCube->mesh = std::make_shared<Mesh>(Cube().CreateMesh());
+        fallbackCube->material = std::make_shared<DefaultMaterial>();
+        scene.AddEntity(fallbackCube);
+    }
+    
     return scene;
 }
 
-
 int main() {
+    
 
     // 初始化OpenGL窗口
     GLFWwindow* window = InitializeOpenGL(800, 600, "E_MaoEngine");
@@ -32,10 +54,11 @@ int main() {
     Framebuffer mainFramebuffer(fbWidth, fbHeight);
 
     Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+    CameraController cameraController(window, camera);
     
     // 初始化场景
     SceneManager scene = InitScene();
-    
+    auto mainModel = scene.GetFirstEntity(); // 假设你的SceneManager有这个接口
     // 初始化ImGui
     ImGuiManager::Init(window);
     
@@ -44,10 +67,17 @@ int main() {
     guiControls.SetFramebufferInfo(mainFramebuffer.GetTexture(), 
                                   mainFramebuffer.width, 
                                   mainFramebuffer.height);
+    guiControls.SetTargetEntity(mainModel); 
 
     // 主渲染循环
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
+
+        float currentFrame = glfwGetTime();
+        static float lastFrame = 0.0f;
+        float deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
+        cameraController.update(deltaTime);
 
         // === 第一阶段：渲染到帧缓冲 ===
         mainFramebuffer.Bind();

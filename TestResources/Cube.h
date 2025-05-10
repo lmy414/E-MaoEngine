@@ -5,7 +5,7 @@
 
 class Cube : public Geometry {
     
-    //Cube() = default; // 添加默认构造函数
+    //  Cube() = default; // 添加默认构造函数
     
     Cube(Cube&&) = default;
     

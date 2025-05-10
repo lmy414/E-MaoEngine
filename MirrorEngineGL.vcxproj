@@ -146,6 +146,7 @@
     <ClCompile Include="Src\Gui\ImGuiManager.cpp" />
     <ClCompile Include="Src\Mian.cpp" />
     <ClCompile Include="Src\Render\Camera.cpp" />
+    <ClCompile Include="Src\Render\CameraController.cpp" />
     <ClCompile Include="Src\Render\Framebuffer.cpp" />
     <ClCompile Include="Src\Render\Material\DerivedMaterials.h" />
     <ClCompile Include="Src\Render\Material\Material.cpp" />
@@ -155,6 +156,7 @@
     <ClCompile Include="Src\Render\ShaderManager.cpp" />
     <ClCompile Include="Src\Render\Texture.cpp" />
     <ClCompile Include="Src\Resources\stb_image.cpp" />
+    <ClCompile Include="TestResources\OBJLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui\dirent.h" />
@@ -172,6 +174,7 @@
     <ClInclude Include="Src\Gui\GUIControls.h" />
     <ClInclude Include="Src\Gui\ImGuiManager.h" />
     <ClInclude Include="Src\Render\Camera.h" />
+    <ClInclude Include="Src\Render\CameraController.h" />
     <ClInclude Include="Src\Render\Entity.h" />
     <ClInclude Include="Src\Render\Framebuffer.h" />
     <ClInclude Include="Src\Render\Material\Material.h" />
@@ -186,8 +189,10 @@
     <ClInclude Include="Src\Resources\stb_image.h" />
     <ClInclude Include="TestResources\Cube.h" />
     <ClInclude Include="TestResources\Geometry.h" />
+    <ClInclude Include="TestResources\OBJLoader.h" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Assets\m\011obj.obj" />
     <Content Include="Assets\m\cs.fbx" />
     <Content Include="Assets\m\cs2.fbx" />
     <Content Include="Assets\tex\6-1948-2.png" />
