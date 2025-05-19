@@ -2,6 +2,7 @@
 #include <vector>
 #include <memory>
 #include <algorithm>
+#include "../Render/Light/Light.h"
 #include "Entity.h"
 
 class SceneManager {
@@ -15,7 +16,8 @@ public:
         return entities.empty() ? nullptr : entities.front();
     }
 
-
+    Light light; // << 新增成员变量
+    
     void RenderScene(const glm::mat4& view, const glm::mat4& projection) {
         // 计算公共矩阵
         //const glm::mat4 viewProj = projection * view;
@@ -26,6 +28,10 @@ public:
         // 统一渲染流程
         for(const auto& entity : entities) {
             if(entity->IsRenderable()) {
+                // 增加这三个参数设置步骤 ▶ 核心添加部分
+                entity->material->SetVector3("lightColor", light.color);
+                entity->material->SetVector3("lightDir", light.direction);
+                entity->material->SetFloat("lightIntensity", light.intensity);
                 entity->Render(view,projection);
             }
         }

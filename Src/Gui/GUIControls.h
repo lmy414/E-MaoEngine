@@ -4,11 +4,25 @@
 #include "../Render/Entity.h"
 #include <GLFW/glfw3.h>
 #include "../../imgui/imgui.h"
+#include "../Render/Light/Light.h"
+#include "../Render/Material/DerivedMaterials.h"
 
 class GUIControls {
+   // glm::vec3 triangleColor = glm::vec3(1.0f); // 新增材质颜色存储
+   // std::weak_ptr<Entity> GetTargetEntity() const { return targetEntity; }
+
 public:
-    glm::vec3 triangleColor = {1.0f, 0.0f, 0.0f}; // 默认红色
+    glm::vec3 triangleColor = glm::vec3(1.0f); // 新增材质颜色存储
+    std::weak_ptr<Entity> GetTargetEntity() const { return targetEntity; }
+    const glm::vec3& GetTriangleColor() const { return triangleColor; }  // 新增
     glm::vec3 clearColor = {0.2f, 0.3f, 0.3f};    // 默认背景色
+    
+    
+    //灯光
+    Light* currentLight = nullptr;
+    void SetLight(Light* light) { 
+        currentLight = light; 
+    }
     
     // 新增帧缓冲相关参数
     GLuint framebufferTexture = 0;

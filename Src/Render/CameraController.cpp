@@ -70,7 +70,7 @@ void CameraController::mouseButtonCallback(GLFWwindow* w, int button, int action
 
 //=== 实际输入处理 ===//
 void CameraController::processMouseMovement(double x, double y) {
-    if (!inputState_.leftButtonPressed) return;
+    if (!inputState_.middleButtonPressed) return;
 
     float xOffset = static_cast<float>(x - inputState_.lastX);
     float yOffset = static_cast<float>(inputState_.lastY - y); // Y轴反转
@@ -94,11 +94,11 @@ void CameraController::processKey(int key, int action) {
 }
 
 void CameraController::processMouseButton(int button, int action) {
-    if (button == GLFW_MOUSE_BUTTON_LEFT) {
-        inputState_.leftButtonPressed = (action == GLFW_PRESS);
+    if (button == GLFW_MOUSE_BUTTON_MIDDLE) {
+        inputState_.middleButtonPressed = (action == GLFW_PRESS);
         
         // 更新鼠标初始位置
-        if (inputState_.leftButtonPressed) {
+        if (inputState_.middleButtonPressed) {
             glfwGetCursorPos(window_, &inputState_.lastX, &inputState_.lastY);
         }
     }

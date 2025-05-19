@@ -4,6 +4,7 @@
 #include "../../imgui/imgui.h"
 #include "../../imgui/imgui_impl_glfw.h"
 #include "../../imgui/imgui_impl_opengl3.h"
+//#include "../Render/Light/Light.h"
 
 
 class ImGuiManager {
@@ -12,5 +13,4 @@ public:
     static void Shutdown();
     static void BeginFrame();
     static void EndFrame();
-    
 };

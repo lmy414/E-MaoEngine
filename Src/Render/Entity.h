@@ -5,6 +5,7 @@
 
 class Entity {
 public:
+    std::string name; // 新增名字
     std::shared_ptr<Transform> transform = std::make_shared<Transform>();
     std::shared_ptr<Mesh> mesh;
     std::shared_ptr<Material> material;
@@ -46,6 +47,12 @@ public:
         glm::vec4 pos = view * transform->GetGlobalMatrix()[3];
         return pos.z / pos.w;
     }
+    
+    template<typename T>
+    std::shared_ptr<T> GetMaterial() const {
+        return std::dynamic_pointer_cast<T>(material);
+    }
+
 
 private:
     // 保持与你的材质类参数命名一致

@@ -133,6 +133,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="3Dtiles\B3DMLoader.cpp" />
+    <ClCompile Include="3Dtiles\TilesetLoader.cpp" />
     <ClCompile Include="imgui\imgui.cpp" />
     <ClCompile Include="imgui\ImGuiFileDialog.cpp" />
     <ClCompile Include="imgui\imgui_demo.cpp" />
@@ -159,6 +161,8 @@
     <ClCompile Include="TestResources\OBJLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="3Dtiles\B3DMLoader.h" />
+    <ClInclude Include="3Dtiles\TilesetLoader.h" />
     <ClInclude Include="imgui\dirent.h" />
     <ClInclude Include="imgui\imconfig.h" />
     <ClInclude Include="imgui\imgui.h" />
@@ -177,6 +181,7 @@
     <ClInclude Include="Src\Render\CameraController.h" />
     <ClInclude Include="Src\Render\Entity.h" />
     <ClInclude Include="Src\Render\Framebuffer.h" />
+    <ClInclude Include="Src\Render\Light\Light.h" />
     <ClInclude Include="Src\Render\Material\Material.h" />
     <ClInclude Include="Src\Render\Mesh.h" />
     <ClInclude Include="Src\Render\Opengl_Utils.h" />

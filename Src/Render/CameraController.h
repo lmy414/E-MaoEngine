@@ -22,7 +22,7 @@ private:
     
     // 输入状态管理
     struct {
-        bool leftButtonPressed = false;
+        bool middleButtonPressed  = false;
         double lastX = 0.0, lastY = 0.0;
         std::unordered_map<int, bool> keys{};
         float scrollOffset = 0.0f;

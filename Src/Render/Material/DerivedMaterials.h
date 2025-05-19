@@ -1,49 +1,34 @@
-﻿#pragma once
+﻿// DefaultMaterial.h
+#pragma once
 #include "Material.h"
 #include "../ShaderManager.h"
 
-// 默认材质（无需纹理）
 class DefaultMaterial : public Material {
+    glm::vec3 m_ColorCache{ 1.0f, 1.0f, 1.0f };
+    
+    static constexpr const char* COLOR_PARAM_NAME = "uColor";
 public:
-    DefaultMaterial() 
-        : Material(ShaderManager::Get("Default")) 
-    {
-        SetVector3("uColor", glm::vec3(1.0f));
+    DefaultMaterial() : Material(ShaderManager::Get("Default")) {
+        SetColor(m_ColorCache);
     }
-};
-
-// 基础漫反射材质
-
-
-/*// PBR材质
-class PBRMaterial : public Material {
-public:
-    PBRMaterial()
-        : Material(ShaderManager::Get("PBR")) 
-    {
-        SetFloat("uMetallic", 0.0f);
-        SetFloat("uRoughness", 0.5f);
+    
+    // 保持与SetVector3一致的参数传递风格
+    void SetColor(const glm::vec3& value) {
+        m_ColorCache = value;
         
-        SetTexture("uAlbedo", "default_white.png",
-                  TextureLabel::BaseColor,
-                  TextureType::SRGB);
-        SetTexture("uNormal", "default_normal.png",
-                  TextureLabel::Normal,
-                  TextureType::RGB);
-        SetTexture("uMetallicRoughness", "default_metal_rough.png",
-                  TextureLabel::Metallic,
-                  TextureType::RGB);
+        // 复用基类逻辑（参考你的现有代码结构）
+        // ↓↓↓ 与SetVector3相同的存储和标记方式 ↓↓↓
+        vec3Params[COLOR_PARAM_NAME] = value;
+        dirty = true;
+        
+        // 或者直接调用基类方法（如果继承可见性允许）
+        // Material::SetVector3(COLOR_PARAM_NAME, value);
+    }
+    // 保持原有通用参数接口的访问性
+    using Material::SetVector3;
+    // 保持与SetVector3风格一致的获取方法
+    const glm::vec3& GetColor() const { 
+        return m_ColorCache; 
     }
 
-    void SetAlbedo(const std::string& path) {
-        SetTexture("uAlbedo", path,
-                  TextureLabel::BaseColor,
-                  TextureType::SRGB);
-    }
-
-    void SetNormalMap(const std::string& path) {
-        SetTexture("uNormal", path,
-                  TextureLabel::Normal,
-                  TextureType::RGB);
-    }
-};*/
+};

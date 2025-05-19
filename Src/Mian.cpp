@@ -3,43 +3,73 @@
 #include"Render/Camera.h"
 #include"../TestResources/OBJLoader.h"
 #include "../Src/Render/CameraController.h"
+#include "../3Dtiles/TilesetLoader.h"
+#include "../3Dtiles/B3DMLoader.h"
 
-// 场景初始化函数
+#include <filesystem>  // 需要C++17或更高版本
+namespace fs = std::filesystem;  // 在全局作用域添加
+
+// Main.cpp 修改场景初始化函数
 SceneManager InitScene() {
     SceneManager scene;
-    try {
-        // 加载OBJ模型（代替原来的立方体）
-        auto modelEntity = std::make_shared<Entity>();
-        
-        // 使用OBJLoader加载模型
-        Mesh objMesh = OBJLoader::LoadFromFile("E:/MirrorEngine/MirrorEngine2/Assets/m/011obj.obj");
-        
-        // 通过移动语义创建网格
-        modelEntity->mesh = std::make_shared<Mesh>(std::move(objMesh));
-        
-        // 应用默认材质
-        modelEntity->material = std::make_shared<DefaultMaterial>();
-        
-        // 设置模型变换
-        modelEntity->transform->position = {0.0f, -1.0f, 0.0f}; // Y向下移动1单位
-        modelEntity->transform->scale = {0.5f, 0.5f, 0.5f};     // 缩放调整模型大小
-        modelEntity->transform->MarkDirty();
+    const std::string base_path = "C:/Users/Mirror/Desktop/3DData/";
+    
+    // 需要加载的OBJ模型列表
+    const std::vector<std::string> models = {
+        "测试数据/04.obj",
+        // 可在此继续添加其他OBJ文件
+    };
 
-        scene.AddEntity(modelEntity);
+    try {
+        for (const auto& model : models) {
+            fs::path full_path = fs::path(base_path) / model;
+
+            if (!fs::exists(full_path)) {
+                std::cerr << "[错误] OBJ文件不存在: " << full_path << std::endl;
+                continue;
+            }
+
+            try {
+                auto entity = std::make_shared<Entity>();
+                entity->mesh = std::make_shared<Mesh>(OBJLoader::LoadFromFile(full_path.string()));
+                
+                // 初始化变换参数
+                entity->transform->position = glm::vec3(0.0f); // 初始位置
+                entity->transform->scale = glm::vec3(1.0f);    // 默认缩放
+                
+                // 关联默认材质
+                entity->material = std::make_shared<DefaultMaterial>();
+                
+                // 设置实体名称
+                entity->name = full_path.stem().string(); // 移除文件后缀
+                
+                scene.AddEntity(entity);
+                std::cout << "成功加载: " << full_path.filename() << std::endl;
+            }
+            catch (const std::exception& e) {
+                std::cerr << "[OBJ加载失败] " << full_path.filename() 
+                          << " - " << e.what() << std::endl;
+            }
+        }
     }
     catch (const std::exception& e) {
-        std::cerr << "初始化场景失败: " << e.what() << std::endl;
-        // 可在此创建默认立方体作为fallback
-        auto fallbackCube = std::make_shared<Entity>();
-        fallbackCube->mesh = std::make_shared<Mesh>(Cube().CreateMesh());
-        fallbackCube->material = std::make_shared<DefaultMaterial>();
-        scene.AddEntity(fallbackCube);
+        std::cerr << "场景初始化异常: " << e.what() << std::endl;
     }
-    
+
     return scene;
 }
 
+
+
+
+
 int main() {
+
+#ifdef _WIN32
+    // 设置控制台为UTF-8编码
+    SetConsoleOutputCP(65001); 
+#endif
+
     
 
     // 初始化OpenGL窗口
@@ -58,7 +88,7 @@ int main() {
     
     // 初始化场景
     SceneManager scene = InitScene();
-    auto mainModel = scene.GetFirstEntity(); // 假设你的SceneManager有这个接口
+    auto mainModel = scene.GetFirstEntity();
     // 初始化ImGui
     ImGuiManager::Init(window);
     
@@ -67,7 +97,18 @@ int main() {
     guiControls.SetFramebufferInfo(mainFramebuffer.GetTexture(), 
                                   mainFramebuffer.width, 
                                   mainFramebuffer.height);
-    guiControls.SetTargetEntity(mainModel); 
+    guiControls.SetTargetEntity(mainModel);
+    // 确保材质颜色初始化同步
+    if (auto entity = guiControls.GetTargetEntity().lock()) {
+        if (auto mat = entity->GetMaterial<DefaultMaterial>()) {
+            guiControls.triangleColor = mat->GetColor(); // 双向同步
+        }
+    }
+    
+    guiControls.SetLight(&scene.light); // << 关联场景的灯光对象
+
+    
+
 
     // 主渲染循环
     while (!glfwWindowShouldClose(window)) {
