@@ -80,6 +80,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -108,7 +109,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -134,6 +135,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="3Dtiles\GLBParser.cpp" />
+    <ClCompile Include="3Dtiles\GLTF1Parser.cpp" />
     <ClCompile Include="3Dtiles\TilesetParser.cpp" />
     <ClCompile Include="imgui\imgui.cpp" />
     <ClCompile Include="imgui\ImGuiFileDialog.cpp" />
@@ -158,11 +160,13 @@
     <ClCompile Include="Src\Render\ShaderManager.cpp" />
     <ClCompile Include="Src\Render\Texture.cpp" />
     <ClCompile Include="Src\Resources\stb_image.cpp" />
+    <ClCompile Include="Src\Resources\stb_impl.cpp" />
     <ClCompile Include="TestResources\OBJLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="3Dtiles\B3DMLoader.h" />
     <ClInclude Include="3Dtiles\GLBParser.h" />
+    <ClInclude Include="3Dtiles\GLTF1Parser.h" />
     <ClInclude Include="3Dtiles\TilesetParser.h" />
     <ClInclude Include="imgui\dirent.h" />
     <ClInclude Include="imgui\imconfig.h" />
@@ -176,6 +180,7 @@
     <ClInclude Include="imgui\imstb_rectpack.h" />
     <ClInclude Include="imgui\imstb_textedit.h" />
     <ClInclude Include="imgui\imstb_truetype.h" />
+    <ClInclude Include="Src\Core\EndianUtils.h" />
     <ClInclude Include="Src\Gui\GUIControls.h" />
     <ClInclude Include="Src\Gui\ImGuiManager.h" />
     <ClInclude Include="Src\Render\Camera.h" />
@@ -194,6 +199,7 @@
     <ClInclude Include="Src\Render\Transform.h" />
     <ClInclude Include="Src\Resources\stb_image.h" />
     <ClInclude Include="Src\Resources\stb_image_write.h" />
+    <ClInclude Include="Src\Resources\stb_impl.h" />
     <ClInclude Include="Src\Resources\tiny_gltf.h" />
     <ClInclude Include="TestResources\Cube.h" />
     <ClInclude Include="TestResources\Geometry.h" />
@@ -208,7 +214,6 @@
     <Content Include="Assets\tex\cs3.png" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Src\Core\" />
     <Folder Include="Src\Tool\" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

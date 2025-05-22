@@ -13,7 +13,7 @@ namespace fs = std::filesystem;  // 在全局作用域添加
 // Main.cpp 修改场景初始化函数
 SceneManager InitScene() {
     SceneManager scene;
-    const std::string base_path = "C:/Users/Mirror/Desktop/3DData/";
+    const std::string base_path = "C:/Users/Mirror/Desktop/3DData/70400-main/TilesetWithDiscreteLOD/";
 
     // 修改为加载3D Tiles
     try {
