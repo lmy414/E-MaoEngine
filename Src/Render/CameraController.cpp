@@ -30,21 +30,20 @@ CameraController::~CameraController() {
 }
 
 void CameraController::update(float deltaTime) {
-    // 处理WASD移动
     static const std::unordered_map<int, Camera::Movement> keyMappings{
-        {GLFW_KEY_W, Camera::Movement::Forward},
-        {GLFW_KEY_S, Camera::Movement::Backward},
-        {GLFW_KEY_A, Camera::Movement::Left},
-        {GLFW_KEY_D, Camera::Movement::Right},
-        {GLFW_KEY_SPACE, Camera::Movement::Up},
-        {GLFW_KEY_LEFT_SHIFT, Camera::Movement::Down}
+            {GLFW_KEY_W, Camera::Movement::Forward},
+            {GLFW_KEY_S, Camera::Movement::Backward},
+            {GLFW_KEY_A, Camera::Movement::Left},
+            {GLFW_KEY_D, Camera::Movement::Right},
+            {GLFW_KEY_SPACE, Camera::Movement::Up},
+            {GLFW_KEY_C, Camera::Movement::Down} // Shift改为平移功能
     };
-
     for (const auto& [key, movement] : keyMappings) {
         if (inputState_.keys[key]) {
             camera_.processKeyboard(movement, deltaTime);
         }
     }
+
 }
 
 //=== 静态回调路由 ===//
@@ -72,13 +71,22 @@ void CameraController::mouseButtonCallback(GLFWwindow* w, int button, int action
 void CameraController::processMouseMovement(double x, double y) {
     if (!inputState_.middleButtonPressed) return;
 
-    float xOffset = static_cast<float>(x - inputState_.lastX);
-    float yOffset = static_cast<float>(inputState_.lastY - y); // Y轴反转
-
-    camera_.processMouseMovement(xOffset, yOffset);
-
+    const bool shiftPressed = 
+       glfwGetKey(window_, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
+       glfwGetKey(window_, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
+    const float xOffset = static_cast<float>(x - inputState_.lastX);
+    const float yOffset = static_cast<float>(inputState_.lastY - y);
+    if (shiftPressed) {
+        camera_.processPan(
+            xOffset * camera_.getConfig().panSensitivity,
+            yOffset * camera_.getConfig().panSensitivity
+        );
+    } else {
+        camera_.processMouseMovement(xOffset, yOffset);
+    }
     inputState_.lastX = x;
     inputState_.lastY = y;
+
 }
 
 void CameraController::processScroll(double offset) {

@@ -25,7 +25,6 @@ private:
         bool middleButtonPressed  = false;
         double lastX = 0.0, lastY = 0.0;
         std::unordered_map<int, bool> keys{};
-        float scrollOffset = 0.0f;
     } inputState_;
 
     // 回调包装器

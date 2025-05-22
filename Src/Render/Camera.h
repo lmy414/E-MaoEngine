@@ -23,6 +23,7 @@ public:
         float zoomMax = 90.0f;
         float pitchMin = -89.0f;
         float pitchMax = 89.0f;
+        float panSensitivity = 0.002f;  // 平移灵敏度
     };
 
     explicit Camera(
@@ -38,10 +39,12 @@ public:
     void processKeyboard(Movement direction, float deltaTime) noexcept;
     void processMouseMovement(float xOffset, float yOffset, bool constrainPitch = true) noexcept;
     void processMouseScroll(float yOffset) noexcept;
+    void processPan(float xOffset, float yOffset) noexcept;
 
     // 访问器方法
     [[nodiscard]] const glm::vec3& position() const noexcept { return position_; }
     [[nodiscard]] glm::vec3 front() const noexcept { return front_; }
+    [[nodiscard]] const Configuration& getConfig() const noexcept { return config; }
     void setPosition(const glm::vec3& newPos) noexcept { position_ = newPos; }
 
 private:

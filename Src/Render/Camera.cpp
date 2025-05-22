@@ -56,3 +56,9 @@ void Camera::updateVectors() noexcept {
     right_ = glm::normalize(glm::cross(front_, worldUp_));
     up_    = glm::normalize(glm::cross(right_, front_));
 }
+
+void Camera::processPan(float xOffset, float yOffset) noexcept {
+    position_ += right_ * xOffset;
+    position_ += up_ * yOffset;
+    updateVectors();
+}
