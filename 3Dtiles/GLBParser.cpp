@@ -1,5 +1,5 @@
 ﻿// GLBParser.cpp
-#define TINYGLTF_IMPLEMENTATION    // ✅ 确保唯一实现
+#define TINYGLTF_IMPLEMENTATION    //确保唯一实现
 #define TINYGLTF_USE_CPP14
 #include "../Src/Core/EndianUtils.h"
 #include "GLBParser.h"

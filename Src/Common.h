@@ -20,7 +20,14 @@
 #include "../Src/Render/Shader.h"
 #include "../Src/Render/Mesh.h"
 #include "../Src/Render/Material/DerivedMaterials.h"
-
+#include <windows.h> 
+#include "../imgui/dirent.h"
+#include"Render/Camera.h"
+#include"../TestResources/OBJLoader.h"
+#include "../3Dtiles/B3DMLoader.h"
+#include "../Src/Render/CameraController.h"
+#include "../3Dtiles/TilesetParser.h"
+#include <filesystem>  // 需要C++17或更高版本
 
 //测试用资源
 #include "../TestResources/Cube.h"

@@ -9,7 +9,7 @@
 
 
 // GLB头结构
-#pragma pack(push, 1)
+#pragma pack(push, custom_alignment)
 struct GLBHeader {
     char magic[4];
     uint32_t version;

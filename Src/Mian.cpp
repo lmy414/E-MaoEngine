@@ -1,13 +1,4 @@
 ﻿#include "Common.h"
-#include <windows.h> 
-#include "../imgui/dirent.h"
-#include"Render/Camera.h"
-#include"../TestResources/OBJLoader.h"
-#include "../3Dtiles/B3DMLoader.h"
-#include "../Src/Render/CameraController.h"
-#include "../3Dtiles/TilesetParser.h"
-#include <filesystem>  // 需要C++17或更高版本
-
 namespace fs = std::filesystem;  // 在全局作用域添加
 
 //修改场景初始化函数
@@ -17,17 +8,17 @@ SceneManager InitScene() {
     const std::string base_path = "C:/Users/Mirror/Desktop/3DData/测试用例/";
     const std::string tileset_path = base_path + "tileset.json";
 
-    std::cout << "🚀 [InitScene] 开始初始化场景..." << std::endl;
+    std::cout << "[InitScene] 开始初始化场景..." << std::endl;
 
     try {
-        std::cout << "📦 解析Tileset路径: " << tileset_path << std::endl;
+        std::cout << "解析Tileset路径: " << tileset_path << std::endl;
 
         auto modelPaths = TilesetParser::GetB3DMPaths(tileset_path);
-        std::cout << "🔍 获取到模型数量: " << modelPaths.size() << std::endl;
+        std::cout << "获取到模型数量: " << modelPaths.size() << std::endl;
 
         for (const auto& modelPath : modelPaths) {
             std::cout << "---------------------------------------------" << std::endl;
-            std::cout << "📁 尝试加载模型文件: " << modelPath << std::endl;
+            std::cout << "尝试加载模型文件: " << modelPath << std::endl;
 
             try {
                 auto ext = fs::path(modelPath).extension().string();
@@ -36,21 +27,21 @@ SceneManager InitScene() {
                 std::shared_ptr<Mesh> mesh;
 
                 if (ext == ".b3dm") {
-                    std::cout << "🧱 识别为 B3DM 格式，调用 B3DMLoader 加载..." << std::endl;
+                    std::cout << "识别为 B3DM 格式，调用 B3DMLoader 加载..." << std::endl;
                     mesh = std::make_shared<Mesh>(B3DMLoader::LoadFromFile(modelPath));
                 } else if (ext == ".glb") {
-                    std::cout << "🧩 识别为 GLB 格式，直接解析..." << std::endl;
+                    std::cout << "识别为 GLB 格式，直接解析..." << std::endl;
 
                     std::ifstream file(modelPath, std::ios::binary);
-                    if (!file) throw std::runtime_error("❌ 无法打开GLB文件: " + modelPath);
+                    if (!file) throw std::runtime_error("无法打开GLB文件: " + modelPath);
 
                     std::vector<uint8_t> glbData((std::istreambuf_iterator<char>(file)),
                                                  std::istreambuf_iterator<char>());
 
-                    std::cout << "📦 读取GLB数据完毕，大小: " << glbData.size() << " 字节" << std::endl;
+                    std::cout << "读取GLB数据完毕，大小: " << glbData.size() << " 字节" << std::endl;
                     mesh = std::make_shared<Mesh>(Mirror::GLTF::GLBParser::Parse(glbData).ToMesh());
                 } else {
-                    std::cerr << "⚠️ [跳过] 不支持的模型格式: " << modelPath << std::endl;
+                    std::cerr << "[跳过] 不支持的模型格式: " << modelPath << std::endl;
                     continue;
                 }
 
@@ -62,16 +53,16 @@ SceneManager InitScene() {
                 entity->name = fs::path(modelPath).stem().string();
 
                 scene.AddEntity(entity);
-                std::cout << "✅ 成功加载模型并添加到场景: " << modelPath << std::endl;
+                std::cout << "成功加载模型并添加到场景: " << modelPath << std::endl;
             } catch (const std::exception& e) {
-                std::cerr << "❌ [模型加载失败] " << modelPath << " - " << e.what() << std::endl;
+                std::cerr << "[模型加载失败] " << modelPath << " - " << e.what() << std::endl;
             }
         }
     } catch (const std::exception& e) {
-        std::cerr << "❌ [场景初始化失败] " << e.what() << std::endl;
+        std::cerr << "[场景初始化失败] " << e.what() << std::endl;
     }
 
-    //std::cout << "✅ [InitScene] 场景初始化完成，实体数量: " << scene.GetEntities().size() << std::endl;
+    //std::cout << "[InitScene] 场景初始化完成，实体数量: " << scene.GetEntities().size() << std::endl;
     return scene;
 }
 
@@ -79,7 +70,6 @@ SceneManager InitScene() {
 
 
 int main() {
-    
     
     // 初始化OpenGL窗口
     GLFWwindow* window = InitializeOpenGL(800, 600, "E_MaoEngine");
