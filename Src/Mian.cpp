@@ -1,53 +1,44 @@
 ﻿#include "Common.h"
+#include <windows.h> 
 #include "../imgui/dirent.h"
 #include"Render/Camera.h"
 #include"../TestResources/OBJLoader.h"
-#include "../Src/Render/CameraController.h"
-#include "../3Dtiles/TilesetLoader.h"
 #include "../3Dtiles/B3DMLoader.h"
-
+#include "../Src/Render/CameraController.h"
+#include "../3Dtiles/TilesetParser.h"
 #include <filesystem>  // 需要C++17或更高版本
+
 namespace fs = std::filesystem;  // 在全局作用域添加
 
 // Main.cpp 修改场景初始化函数
 SceneManager InitScene() {
     SceneManager scene;
     const std::string base_path = "C:/Users/Mirror/Desktop/3DData/";
-    
-    // 需要加载的OBJ模型列表
-    const std::vector<std::string> models = {
-        "测试数据/04.obj",
-        // 可在此继续添加其他OBJ文件
-    };
 
+    // 修改为加载3D Tiles
     try {
-        for (const auto& model : models) {
-            fs::path full_path = fs::path(base_path) / model;
-
-            if (!fs::exists(full_path)) {
-                std::cerr << "[错误] OBJ文件不存在: " << full_path << std::endl;
-                continue;
-            }
-
+        // 步骤1：解析Tileset
+        auto b3dmPaths = TilesetParser::GetB3DMPaths(base_path + "tileset.json");
+        
+        // 步骤2：加载所有B3DM模型
+        for (const auto& b3dmPath : b3dmPaths) {
             try {
                 auto entity = std::make_shared<Entity>();
-                entity->mesh = std::make_shared<Mesh>(OBJLoader::LoadFromFile(full_path.string()));
+                entity->mesh = std::make_shared<Mesh>(B3DMLoader::LoadFromFile(b3dmPath));
                 
                 // 初始化变换参数
-                entity->transform->position = glm::vec3(0.0f); // 初始位置
-                entity->transform->scale = glm::vec3(1.0f);    // 默认缩放
+                entity->transform->position = glm::vec3(0.0f);
+                entity->transform->scale = glm::vec3(1.0f);
                 
                 // 关联默认材质
                 entity->material = std::make_shared<DefaultMaterial>();
-                
-                // 设置实体名称
-                entity->name = full_path.stem().string(); // 移除文件后缀
+                entity->name = fs::path(b3dmPath).stem().string();
                 
                 scene.AddEntity(entity);
-                std::cout << "成功加载: " << full_path.filename() << std::endl;
+                std::cout << "成功加载B3DM: " << b3dmPath << std::endl;
             }
             catch (const std::exception& e) {
-                std::cerr << "[OBJ加载失败] " << full_path.filename() 
+                std::cerr << "[B3DM加载失败] " << b3dmPath 
                           << " - " << e.what() << std::endl;
             }
         }
@@ -60,18 +51,9 @@ SceneManager InitScene() {
 }
 
 
-
-
-
 int main() {
-
-#ifdef _WIN32
-    // 设置控制台为UTF-8编码
-    SetConsoleOutputCP(65001); 
-#endif
-
     
-
+    
     // 初始化OpenGL窗口
     GLFWwindow* window = InitializeOpenGL(800, 600, "E_MaoEngine");
     if (!window) return -1;
@@ -106,10 +88,7 @@ int main() {
     }
     
     guiControls.SetLight(&scene.light); // << 关联场景的灯光对象
-
     
-
-
     // 主渲染循环
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
@@ -133,8 +112,6 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
         //glEnable(GL_DEPTH_TEST); // 保持启用状态
-
-        
         glm::mat4 view = camera.getViewMatrix();
         glm::mat4 projection = glm::perspective(
             glm::radians(camera.getZoom()), 

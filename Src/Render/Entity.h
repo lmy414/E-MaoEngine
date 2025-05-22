@@ -16,7 +16,6 @@ public:
         // 计算模型矩阵
         const glm::mat4 model = transform->GetGlobalMatrix();
         
-
         // 设置材质参数
         material->SetMatrix4("uModel", model);
         material->SetMatrix4("uView", view);

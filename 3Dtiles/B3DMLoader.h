@@ -1,36 +1,39 @@
-﻿#pragma once
+﻿// B3DMLoader.h
+#pragma once
+#include "GLBParser.h"
 #include "../Src/Render/Mesh.h"
-#include <glm/glm.hpp>
-#include <vector>
 #include <fstream>
-#include <json.hpp>
 
 class B3DMLoader {
 public:
-    static Mesh LoadFromFile(const std::string& filepath);
-    
-private:
-    struct GLTFAccessor {
-        uint32_t bufferView;
-        uint32_t componentType;
-        uint32_t count;
-        std::string type;
-    };
+    static Mesh LoadFromFile(const std::string& path) {
+        std::ifstream file(path, std::ios::binary);
+        if (!file) throw std::runtime_error("无法打开文件: " + path);
 
-    struct GLTFBufferView {
-        uint32_t buffer;
-        uint32_t byteOffset;
-        uint32_t byteLength;
-    };
+        // 读取文件头
+        struct Header {
+            char magic[4];
+            uint32_t version;
+            uint32_t byteLength;
+        } header;
+        file.read(reinterpret_cast<char*>(&header), sizeof(Header));
 
-    static void ParseGLB(const std::vector<uint8_t>& glbData, 
-                        std::vector<Vertex>& outVertices,
-                        std::vector<unsigned int>& outIndices);
-    
-    static void ProcessPrimitive(const nlohmann::json& json,
-                               const std::vector<uint8_t>& binData,
-                               const std::vector<GLTFAccessor>& accessors,
-                               const std::vector<GLTFBufferView>& bufferViews,
-                               std::vector<Vertex>& vertices,
-                               std::vector<unsigned int>& indices);
+        // 验证文件格式
+        if (std::string(header.magic, 4) != "b3dm") {
+            throw std::runtime_error("无效的B3DM文件头");
+        }
+
+        // 读取GLB数据
+        std::vector<uint8_t> glbData(header.byteLength - sizeof(Header));
+        file.read(reinterpret_cast<char*>(glbData.data()), glbData.size());
+
+        // 使用GLBParser解析
+        auto glbResult = GLBParser::Parse(glbData);
+        
+        // 创建网格（使用移动语义）
+        return Mesh(
+            std::move(glbResult.vertices),
+            std::move(glbResult.indices)
+        );
+    }
 };

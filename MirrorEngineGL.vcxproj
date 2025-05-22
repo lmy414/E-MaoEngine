@@ -133,8 +133,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="3Dtiles\B3DMLoader.cpp" />
-    <ClCompile Include="3Dtiles\TilesetLoader.cpp" />
+    <ClCompile Include="3Dtiles\GLBParser.cpp" />
+    <ClCompile Include="3Dtiles\TilesetParser.cpp" />
     <ClCompile Include="imgui\imgui.cpp" />
     <ClCompile Include="imgui\ImGuiFileDialog.cpp" />
     <ClCompile Include="imgui\imgui_demo.cpp" />
@@ -162,7 +162,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="3Dtiles\B3DMLoader.h" />
-    <ClInclude Include="3Dtiles\TilesetLoader.h" />
+    <ClInclude Include="3Dtiles\GLBParser.h" />
+    <ClInclude Include="3Dtiles\TilesetParser.h" />
     <ClInclude Include="imgui\dirent.h" />
     <ClInclude Include="imgui\imconfig.h" />
     <ClInclude Include="imgui\imgui.h" />
@@ -192,6 +193,8 @@
     <ClInclude Include="Src\Render\Texture.h" />
     <ClInclude Include="Src\Render\Transform.h" />
     <ClInclude Include="Src\Resources\stb_image.h" />
+    <ClInclude Include="Src\Resources\stb_image_write.h" />
+    <ClInclude Include="Src\Resources\tiny_gltf.h" />
     <ClInclude Include="TestResources\Cube.h" />
     <ClInclude Include="TestResources\Geometry.h" />
     <ClInclude Include="TestResources\OBJLoader.h" />
