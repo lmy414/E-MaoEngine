@@ -17,8 +17,8 @@ namespace Mirror {
                 std::vector<glm::vec2> texCoords;
                 std::vector<uint32_t> indices;
                 glm::mat4 transform = glm::mat4(1.0f);
-                // 保持与Mesh类兼容的转换方法
-                ::Mesh ToMesh() const {  // 使用全局命名空间符号
+                
+                ::Mesh ToMesh() const {
                     try {
                         std::vector<Vertex> verts;
                         for(size_t i=0; i<positions.size(); ++i) {
@@ -35,22 +35,20 @@ namespace Mirror {
 
 #pragma pack(push, 1)
             struct GLBHeader {
-                char magic[4];        // 'g','l','T','F'
-                uint32_t version;     // 小端存储
-                uint32_t fileLength;  // 小端存储
+                char magic[4];
+                uint32_t version;
+                uint32_t fileLength;
             };
 
             struct ChunkHeader {
-                uint32_t chunkLength; // 小端存储
-                uint32_t chunkType;   // 大端ASCII
+                uint32_t chunkLength;
+                uint32_t chunkType;
             };
 #pragma pack(pop)
 
             static MeshData Parse(const std::vector<uint8_t>& glbData);
 
         private:
-
-            // 实例方法封装
             MeshData ParseImpl(const std::vector<uint8_t>& glbData);
             void ValidateGLBHeader(const GLBHeader& header, const std::vector<uint8_t>& glbData);
             void ParseScene(const nlohmann::json& root);
@@ -58,16 +56,36 @@ namespace Mirror {
             void ParseMesh(const nlohmann::json& mesh);
             void ParsePrimitive(const nlohmann::json& primitive);
 
-            // 模板方法定义
             template<typename T>
-            const T* GetBufferViewData(const std::string& bufferViewId, size_t count);
+            const T* GetBufferViewData(
+                const std::string& bufferViewId,
+                size_t accessorByteOffset,
+                size_t count,
+                size_t elementSize
+            );
 
-            // 实例状态
+            template<typename T>
+            std::vector<T> ReadStridedData(
+                const uint8_t* basePtr,
+                size_t count,
+                size_t stride,
+                size_t elementSize
+            );
+
             const uint8_t* m_BinaryChunk = nullptr;
             size_t m_BinaryChunkSize = 0;
             nlohmann::json m_SceneJson;
             MeshData m_Result;
+            std::vector<uint8_t> m_StridedCache; // 用于存储跨步数据的临时缓存
         };
+
+        // 显式模板实例化声明
+        extern template const glm::vec3* GLTF1Parser::GetBufferViewData<glm::vec3>(
+            const std::string&, size_t, size_t, size_t);
+        extern template const glm::vec2* GLTF1Parser::GetBufferViewData<glm::vec2>(
+            const std::string&, size_t, size_t, size_t);
+        extern template const uint16_t* GLTF1Parser::GetBufferViewData<uint16_t>(
+            const std::string&, size_t, size_t, size_t);
 
     } // namespace GLTF
 } // namespace Mirror

@@ -99,22 +99,55 @@ void GLTF1Parser::ValidateGLBHeader(const GLBHeader& header, const std::vector<u
 }
 
 template<typename T>
-const T* GLTF1Parser::GetBufferViewData(const std::string& bufferViewId, size_t count) {
+const T* GLTF1Parser::GetBufferViewData(
+    const std::string& bufferViewId,
+    size_t accessorByteOffset,
+    size_t count,
+    size_t elementSize
+) {
     const auto& bufferView = m_SceneJson["bufferViews"][bufferViewId];
-    const size_t byteOffset = bufferView["byteOffset"];
-    const size_t requiredSize = sizeof(T) * count;
-
-    if (byteOffset + requiredSize > m_BinaryChunkSize) {
+    const size_t bufferViewByteOffset = bufferView["byteOffset"];
+    const size_t totalByteOffset = bufferViewByteOffset + accessorByteOffset;
+    const size_t byteStride = bufferView.value("byteStride", 0);
+    size_t requiredSpace = 0;
+    if (byteStride == 0) {
+        requiredSpace = elementSize * count;
+    } else {
+        requiredSpace = byteStride * (count - 1) + elementSize;
+    }
+    if (totalByteOffset + requiredSpace > m_BinaryChunkSize) {
         throw std::runtime_error("BufferView overflow: " + bufferViewId);
     }
-
-    return reinterpret_cast<const T*>(m_BinaryChunk + byteOffset);
+    if (byteStride != 0 && byteStride < elementSize) {
+        throw std::runtime_error("Invalid stride in buffer view: " + bufferViewId);
+    }
+    const uint8_t* dataPtr = m_BinaryChunk + totalByteOffset;
+    // 处理跨步数据
+    if (byteStride != 0 && byteStride != elementSize) {
+        m_StridedCache = ReadStridedData<uint8_t>(
+            dataPtr, 
+            count * elementSize,
+            byteStride,
+            elementSize
+        );
+        return reinterpret_cast<const T*>(m_StridedCache.data());
+    }
+    return reinterpret_cast<const T*>(dataPtr);
 }
-
-// 显式模板实例化
-template const glm::vec3* GLTF1Parser::GetBufferViewData<glm::vec3>(const std::string&, size_t);
-template const glm::vec2* GLTF1Parser::GetBufferViewData<glm::vec2>(const std::string&, size_t);
-template const uint16_t* GLTF1Parser::GetBufferViewData<uint16_t>(const std::string&, size_t);
+template<typename T>
+std::vector<T> GLTF1Parser::ReadStridedData(
+    const uint8_t* basePtr,
+    size_t count,
+    size_t stride,
+    size_t elementSize
+) {
+    std::vector<T> result(count);
+    for (size_t i = 0; i < count; ++i) {
+        const auto* src = basePtr + i * stride;
+        memcpy(&result[i], src, elementSize);
+    }
+    return result;
+}
 
 void GLTF1Parser::ParseScene(const nlohmann::json& root) {
     if (!root.contains("scene")) {
@@ -165,55 +198,64 @@ void GLTF1Parser::ParseMesh(const nlohmann::json& mesh) {
 
 void GLTF1Parser::ParsePrimitive(const nlohmann::json& primitive) {
     if (primitive.value("mode", 4) != 4) return;
-
-    // 顶点属性
     const auto& attributes = primitive["attributes"];
     
     // 位置
     const auto& posAccessor = m_SceneJson["accessors"][attributes["POSITION"].get<std::string>()];
     const size_t vertexCount = posAccessor["count"];
+    const size_t posAccessorOffset = posAccessor.value("byteOffset", 0);
     const auto* positions = GetBufferViewData<glm::vec3>(
-        posAccessor["bufferView"].get<std::string>(), 
-        vertexCount
+        posAccessor["bufferView"].get<std::string>(),
+        posAccessorOffset,
+        vertexCount,
+        sizeof(glm::vec3)
     );
-
     // 法线
     const auto& normalAccessor = m_SceneJson["accessors"][attributes["NORMAL"].get<std::string>()];
+    const size_t normalAccessorOffset = normalAccessor.value("byteOffset", 0);
     const auto* normals = GetBufferViewData<glm::vec3>(
         normalAccessor["bufferView"].get<std::string>(),
-        vertexCount
+        normalAccessorOffset,
+        vertexCount,
+        sizeof(glm::vec3)
     );
-
     // 纹理坐标
     std::vector<glm::vec2> uvs(vertexCount);
     if (attributes.contains("TEXCOORD_0")) {
         const auto& uvAccessor = m_SceneJson["accessors"][attributes["TEXCOORD_0"].get<std::string>()];
+        const size_t uvAccessorOffset = uvAccessor.value("byteOffset", 0);
         const auto* uvData = GetBufferViewData<glm::vec2>(
             uvAccessor["bufferView"].get<std::string>(),
-            vertexCount
+            uvAccessorOffset,
+            vertexCount,
+            sizeof(glm::vec2)
         );
         std::copy(uvData, uvData + vertexCount, uvs.begin());
     }
-
     // 索引
     const auto& indicesAccessor = m_SceneJson["accessors"][primitive["indices"].get<std::string>()];
     const size_t indexCount = indicesAccessor["count"];
     const auto componentType = indicesAccessor["componentType"].get<uint32_t>();
-    
     std::vector<uint32_t> indices;
     if (componentType == 5123) { // UNSIGNED_SHORT
+        const size_t indicesOffset = indicesAccessor.value("byteOffset", 0);
         const auto* raw = GetBufferViewData<uint16_t>(
             indicesAccessor["bufferView"].get<std::string>(),
-            indexCount
+            indicesOffset,      // 访问器偏移
+            indexCount,         // 元素数量
+            sizeof(uint16_t)   // 元素字节大小
         );
         indices.reserve(indexCount);
         for (size_t i = 0; i < indexCount; ++i) {
             indices.push_back(Mirror::Core::EndianUtils::FromLittleEndian(raw[i]));
         }
     } else if (componentType == 5125) { // UNSIGNED_INT
+        const size_t indicesOffset = indicesAccessor.value("byteOffset", 0);
         const auto* raw = GetBufferViewData<uint32_t>(
             indicesAccessor["bufferView"].get<std::string>(),
-            indexCount
+            indicesOffset,      // 访问器偏移
+            indexCount,         // 元素数量
+            sizeof(uint32_t)    // 元素字节大小
         );
         indices.reserve(indexCount);
         for (size_t i = 0; i < indexCount; ++i) {
@@ -224,6 +266,7 @@ void GLTF1Parser::ParsePrimitive(const nlohmann::json& primitive) {
     } else {
         throw std::runtime_error("Unsupported index type");
     }
+
     std::cout << "Position accessor: " << attributes["POSITION"] << "\n"
               << "Normal accessor: " << attributes["NORMAL"] << "\n"
               << "POS bufferView: " << posAccessor["bufferView"] << "\n"
@@ -239,3 +282,10 @@ void GLTF1Parser::ParsePrimitive(const nlohmann::json& primitive) {
         m_Result.indices.push_back(baseIndex + index);
     }
 }
+// 显式模板实例化
+template const glm::vec3* GLTF1Parser::GetBufferViewData<glm::vec3>(
+    const std::string&, size_t, size_t, size_t);
+template const glm::vec2* GLTF1Parser::GetBufferViewData<glm::vec2>(
+    const std::string&, size_t, size_t, size_t);
+template const uint16_t* GLTF1Parser::GetBufferViewData<uint16_t>(
+    const std::string&, size_t, size_t, size_t);
