@@ -1,28 +1,33 @@
-﻿// B3DMLoader.h
-#pragma once
+﻿#pragma once
 #include <vector>
 #include <string>
 #include <fstream>
+#include <sstream>
+#include <stdexcept>
+#include <cstring>
 #include "Core/EndianUtils.h"
 #include "GLTF1Parser.h"
-#include "GLBParser.h"
+#include <filesystem>
+#include "GLBParser.h"  // Assume similar interface for glTF2
 
-class B3DMLoader {
+namespace fs = std::filesystem;
+class B3DMLoader
+{
 public:
-    #pragma pack(push, 1)
+#pragma pack(push, 1)
     struct PackedB3DMHeader {
-        char magic[4];
-        uint8_t version[4];
-        uint8_t byteLength[4];
-        uint8_t ftJSONLen[4];
-        uint8_t ftBinLen[4];
-        uint8_t btJSONLen[4];
-        uint8_t btBinLen[4];
+        char     magic[4];
+        uint8_t  version[4];
+        uint8_t  byteLength[4];
+        uint8_t  ftJSONLen[4];
+        uint8_t  ftBinLen[4];
+        uint8_t  btJSONLen[4];
+        uint8_t  btBinLen[4];
     };
-    #pragma pack(pop)
+#pragma pack(pop)
 
     struct B3DMHeader {
-        char magic[4];
+        char     magic[4];
         uint32_t version;
         uint32_t byteLength;
         uint32_t ftJSONLen;
@@ -32,98 +37,111 @@ public:
     };
 
     static Mesh LoadFromFile(const std::string& path) {
+        std::cout << "📂 开始加载模型文件: " << path << std::endl;
+
         std::ifstream file(path, std::ios::binary);
-        if (!file) throw std::runtime_error("Failed to open file");
+        if (!file) throw std::runtime_error("❌ 无法打开文件: " + path);
 
-        // 读取并转换头部
-        PackedB3DMHeader packedHeader;
-        file.read(reinterpret_cast<char*>(&packedHeader), sizeof(PackedB3DMHeader));
+        std::string ext = fs::path(path).extension().string();
+        std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
 
-        B3DMHeader header;
-        auto readU32 = [](const uint8_t* bytes) {
-            return Mirror::Core::EndianUtils::FromLittleEndian(
-                *reinterpret_cast<const uint32_t*>(bytes));
-        };
+        if (ext == ".glb") {
+            std::cout << "🧩 识别为 GLB 文件，准备直接解析..." << std::endl;
 
-        memcpy(header.magic, packedHeader.magic, 4);
-        header.version       = readU32(packedHeader.version);
-        header.byteLength   = readU32(packedHeader.byteLength);
-        header.ftJSONLen    = readU32(packedHeader.ftJSONLen);
-        header.ftBinLen     = readU32(packedHeader.ftBinLen);
-        header.btJSONLen    = readU32(packedHeader.btJSONLen);
-        header.btBinLen     = readU32(packedHeader.btBinLen);
+            file.seekg(0, std::ios::end);
+            size_t fileSize = file.tellg();
+            file.seekg(0, std::ios::beg);
 
-        // 验证魔术字
-        if (std::string_view(header.magic, 4) != "b3dm") {
-            throw std::runtime_error("Invalid B3DM magic");
-        }
+            std::vector<uint8_t> glbData(fileSize);
+            file.read(reinterpret_cast<char*>(glbData.data()), fileSize);
+            if (!file) throw std::runtime_error("❌ 无法完整读取GLB数据");
 
-        // 计算GLB偏移
-        auto calcPaddedSize = [](uint32_t size) { 
-            return (size + 3) & ~3;
-        };
+            std::cout << "✅ 读取GLB数据完毕，共 " << fileSize << " 字节" << std::endl;
 
-        const size_t glbStartOffset = sizeof(PackedB3DMHeader)
-            + calcPaddedSize(header.ftJSONLen)
-            + calcPaddedSize(header.ftBinLen)
-            + calcPaddedSize(header.btJSONLen)
-            + calcPaddedSize(header.btBinLen);
+            Mirror::GLTF::GLTF1Parser::GLBHeader glbHeader;
+            std::memcpy(&glbHeader, glbData.data(), sizeof(glbHeader));
 
-        // 定位并读取GLB
-        file.seekg(glbStartOffset);
-        if (file.fail()) {
-            throw std::runtime_error("Invalid GLB offset");
-        }
+            if (std::string_view(glbHeader.magic, 4) != "glTF")
+                throw std::runtime_error("❌ 无效的 GLB 魔数");
 
-        // 读取GLB头
-        Mirror::GLTF::GLTF1Parser::GLBHeader glbHeader;
-        file.read(reinterpret_cast<char*>(&glbHeader), sizeof( Mirror::GLTF::GLTF1Parser::GLTF1Parser::GLBHeader));
+            uint32_t glbVersion = Mirror::Core::EndianUtils::FromLittleEndian(glbHeader.version);
+            std::cout << "📜 GLB版本: " << glbVersion << std::endl;
 
-        // 验证GLB
-        if (std::string_view(glbHeader.magic, 4) != "glTF") {
-            throw std::runtime_error("Invalid GLB magic");
-        }
-
-        const uint32_t glbVersion = Mirror::Core::EndianUtils::FromLittleEndian(glbHeader.version);
-        const uint32_t glbLength = Mirror::Core::EndianUtils::FromLittleEndian(glbHeader.fileLength);
-
-        
-        std::cout << "[B3DM] Header Analysis:\n"
-                  << "Magic: " << std::string(header.magic, 4) << "\n"
-                  << "Version: " << header.version << "\n"
-                  << "Total Length: " << header.byteLength << "\n"
-                  << "FeatureTableJSON: " << header.ftJSONLen << " (padded: " 
-                  << calcPaddedSize(header.ftJSONLen) << ")\n"
-                  << "FeatureTableBinary: " << header.ftBinLen << " (padded: " 
-                  << calcPaddedSize(header.ftBinLen) << ")\n"
-                  << "BatchTableJSON: " << header.btJSONLen << " (padded: " 
-                  << calcPaddedSize(header.btJSONLen) << ")\n"
-                  << "BatchTableBinary: " << header.btBinLen << " (padded: " 
-                  << calcPaddedSize(header.btBinLen) << ")\n"
-                  << "Calculated GLB Start Offset: " << glbStartOffset << "\n";
-                  //<< "File Size: " << fileSize << "\n";
-
-
-        // 读取完整GLB数据
-        std::vector<uint8_t> glbData(glbLength);
-        file.seekg(glbStartOffset);
-        file.read(reinterpret_cast<char*>(glbData.data()), glbLength);
-
-        try {
-            // 修改后的GLB版本处理
             if (glbVersion == 1) {
+                std::cout << "🔁 使用 GLTF 1.0 解析器..." << std::endl;
                 return Mirror::GLTF::GLTF1Parser::Parse(glbData).ToMesh();
             } else if (glbVersion == 2) {
-                return Mirror::GLTF::GLBParser::Parse(glbData).ToMesh(); // 确保GLBParser存在
+                std::cout << "🔁 使用 GLTF 2.0 解析器..." << std::endl;
+                return Mirror::GLTF::GLBParser::Parse(glbData).ToMesh();
             } else {
-                throw std::runtime_error("Unsupported GLB version: " + std::to_string(glbVersion));
+                throw std::runtime_error("❌ 不支持的GLB版本: " + std::to_string(glbVersion));
             }
-        } catch (const std::exception& e) {
-            std::ofstream("debug.glb", std::ios::binary)
-                .write(reinterpret_cast<const char*>(glbData.data()), glbData.size());
-            throw;
-           
+        }
+
+        // === 默认处理 .b3dm 文件 ===
+        std::cout << "🧱 识别为 B3DM 文件，准备解析..." << std::endl;
+
+        PackedB3DMHeader packed;
+        file.read(reinterpret_cast<char*>(&packed), sizeof(packed));
+        if (!file) throw std::runtime_error("❌ 无法读取 B3DM Header");
+
+        auto readU32 = [&](const uint8_t* bytes) {
+            uint32_t v;
+            std::memcpy(&v, bytes, sizeof(v));
+            return Mirror::Core::EndianUtils::FromLittleEndian(v);
+        };
+
+        B3DMHeader hdr;
+        std::memcpy(hdr.magic, packed.magic, 4);
+        hdr.version    = readU32(packed.version);
+        hdr.byteLength = readU32(packed.byteLength);
+        hdr.ftJSONLen  = readU32(packed.ftJSONLen);
+        hdr.ftBinLen   = readU32(packed.ftBinLen);
+        hdr.btJSONLen  = readU32(packed.btJSONLen);
+        hdr.btBinLen   = readU32(packed.btBinLen);
+
+        if (std::string_view(hdr.magic, 4) != "b3dm")
+            throw std::runtime_error("❌ 无效的B3DM魔数");
+
+        auto pad4 = [](uint32_t n){ return (n + 3) & ~3u; };
+        size_t offset = sizeof(PackedB3DMHeader)
+                      + pad4(hdr.ftJSONLen)
+                      + pad4(hdr.ftBinLen)
+                      + pad4(hdr.btJSONLen)
+                      + pad4(hdr.btBinLen);
+
+        std::cout << "📋 B3DM头部信息解析:\n"
+                  << " - 版本: " << hdr.version << "\n"
+                  << " - 总长度: " << hdr.byteLength << "\n"
+                  << " - FeatureTable JSON 长度: " << hdr.ftJSONLen << "（对齐后: " << pad4(hdr.ftJSONLen) << "）\n"
+                  << " - FeatureTable Binary 长度: " << hdr.ftBinLen << "（对齐后: " << pad4(hdr.ftBinLen) << "）\n"
+                  << " - BatchTable JSON 长度: " << hdr.btJSONLen << "（对齐后: " << pad4(hdr.btJSONLen) << "）\n"
+                  << " - BatchTable Binary 长度: " << hdr.btBinLen << "（对齐后: " << pad4(hdr.btBinLen) << "）\n"
+                  << " - 计算得到的GLB偏移: " << offset << "\n";
+
+        file.seekg(offset);
+        std::vector<uint8_t> glbData(hdr.byteLength - offset);
+        file.read(reinterpret_cast<char*>(glbData.data()), glbData.size());
+        if (!file) throw std::runtime_error("❌ 无法读取嵌入的GLB数据");
+
+        std::cout << "✅ 嵌入GLB数据读取成功，大小: " << glbData.size() << " 字节" << std::endl;
+
+        Mirror::GLTF::GLTF1Parser::GLBHeader glbHeader;
+        std::memcpy(&glbHeader, glbData.data(), sizeof(glbHeader));
+        if (std::string_view(glbHeader.magic, 4) != "glTF")
+            throw std::runtime_error("❌ 嵌入GLB魔数无效");
+
+        uint32_t glbVersion = Mirror::Core::EndianUtils::FromLittleEndian(glbHeader.version);
+        std::cout << "📜 嵌入GLB版本: " << glbVersion << std::endl;
+
+        if (glbVersion == 1) {
+            std::cout << "🔁 使用 GLTF 1.0 解析器解析嵌入GLB..." << std::endl;
+            return Mirror::GLTF::GLTF1Parser::Parse(glbData).ToMesh();
+        } else if (glbVersion == 2) {
+            std::cout << "🔁 使用 GLTF 2.0 解析器解析嵌入GLB..." << std::endl;
+            return Mirror::GLTF::GLBParser::Parse(glbData).ToMesh();
+        } else {
+            throw std::runtime_error("❌ 不支持的嵌入GLB版本: " + std::to_string(glbVersion));
         }
     }
-    
 };

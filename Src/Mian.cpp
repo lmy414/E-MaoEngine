@@ -10,45 +10,72 @@
 
 namespace fs = std::filesystem;  // 在全局作用域添加
 
-// Main.cpp 修改场景初始化函数
+//修改场景初始化函数
+
 SceneManager InitScene() {
     SceneManager scene;
-    const std::string base_path = "C:/Users/Mirror/Desktop/3DData/70400-main/TilesetWithDiscreteLOD/";
+    const std::string base_path = "C:/Users/Mirror/Desktop/3DData/测试用例/";
+    const std::string tileset_path = base_path + "tileset.json";
 
-    // 修改为加载3D Tiles
+    std::cout << "🚀 [InitScene] 开始初始化场景..." << std::endl;
+
     try {
-        // 步骤1：解析Tileset
-        auto b3dmPaths = TilesetParser::GetB3DMPaths(base_path + "tileset.json");
-        
-        // 步骤2：加载所有B3DM模型
-        for (const auto& b3dmPath : b3dmPaths) {
+        std::cout << "📦 解析Tileset路径: " << tileset_path << std::endl;
+
+        auto modelPaths = TilesetParser::GetB3DMPaths(tileset_path);
+        std::cout << "🔍 获取到模型数量: " << modelPaths.size() << std::endl;
+
+        for (const auto& modelPath : modelPaths) {
+            std::cout << "---------------------------------------------" << std::endl;
+            std::cout << "📁 尝试加载模型文件: " << modelPath << std::endl;
+
             try {
+                auto ext = fs::path(modelPath).extension().string();
+                std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+
+                std::shared_ptr<Mesh> mesh;
+
+                if (ext == ".b3dm") {
+                    std::cout << "🧱 识别为 B3DM 格式，调用 B3DMLoader 加载..." << std::endl;
+                    mesh = std::make_shared<Mesh>(B3DMLoader::LoadFromFile(modelPath));
+                } else if (ext == ".glb") {
+                    std::cout << "🧩 识别为 GLB 格式，直接解析..." << std::endl;
+
+                    std::ifstream file(modelPath, std::ios::binary);
+                    if (!file) throw std::runtime_error("❌ 无法打开GLB文件: " + modelPath);
+
+                    std::vector<uint8_t> glbData((std::istreambuf_iterator<char>(file)),
+                                                 std::istreambuf_iterator<char>());
+
+                    std::cout << "📦 读取GLB数据完毕，大小: " << glbData.size() << " 字节" << std::endl;
+                    mesh = std::make_shared<Mesh>(Mirror::GLTF::GLBParser::Parse(glbData).ToMesh());
+                } else {
+                    std::cerr << "⚠️ [跳过] 不支持的模型格式: " << modelPath << std::endl;
+                    continue;
+                }
+
                 auto entity = std::make_shared<Entity>();
-                entity->mesh = std::make_shared<Mesh>(B3DMLoader::LoadFromFile(b3dmPath));
-                
-                // 初始化变换参数
+                entity->mesh = mesh;
                 entity->transform->position = glm::vec3(0.0f);
                 entity->transform->scale = glm::vec3(1.0f);
-                
-                // 关联默认材质
                 entity->material = std::make_shared<DefaultMaterial>();
-                entity->name = fs::path(b3dmPath).stem().string();
-                
+                entity->name = fs::path(modelPath).stem().string();
+
                 scene.AddEntity(entity);
-                std::cout << "成功加载B3DM: " << b3dmPath << std::endl;
-            }
-            catch (const std::exception& e) {
-                std::cerr << "[B3DM加载失败] " << b3dmPath 
-                          << " - " << e.what() << std::endl;
+                std::cout << "✅ 成功加载模型并添加到场景: " << modelPath << std::endl;
+            } catch (const std::exception& e) {
+                std::cerr << "❌ [模型加载失败] " << modelPath << " - " << e.what() << std::endl;
             }
         }
-    }
-    catch (const std::exception& e) {
-        std::cerr << "场景初始化异常: " << e.what() << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << "❌ [场景初始化失败] " << e.what() << std::endl;
     }
 
+    //std::cout << "✅ [InitScene] 场景初始化完成，实体数量: " << scene.GetEntities().size() << std::endl;
     return scene;
 }
+
+
 
 
 int main() {

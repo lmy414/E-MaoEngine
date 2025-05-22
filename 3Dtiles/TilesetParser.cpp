@@ -6,36 +6,37 @@
 
 using json = nlohmann::json;
 
-std::vector<std::string> TilesetParser::GetB3DMPaths(const std::string& rootTilesetPath) {
-    std::vector<std::string> result;
-    std::unordered_set<std::string> processedFiles;
-    
-    try {
-        fs::path rootPath = fs::canonical(fs::path(rootTilesetPath));
-        if (!fs::exists(rootPath)) {
-            std::cerr << "[Error] Tileset not found: " << rootPath << std::endl;
-            return result;
+std::vector<std::string> TilesetParser::GetB3DMPaths(const std::string& tilesetPath) {
+    std::ifstream file(tilesetPath);
+    if (!file) throw std::runtime_error("无法打开 tileset.json: " + tilesetPath);
+
+    nlohmann::json tilesetJson;
+    file >> tilesetJson;
+
+    std::vector<std::string> results;
+
+    std::function<void(const nlohmann::json&)> traverse;
+    traverse = [&](const nlohmann::json& node) {
+        if (node.contains("content") && node["content"].contains("uri")) {
+            fs::path contentPath = fs::path(tilesetPath).parent_path() / node["content"]["uri"].get<std::string>();
+            results.push_back(contentPath.string());  // ✅ 转换为 string
         }
-        
-        json data;
-        {
-            std::ifstream file(rootPath);
-            if (!file.is_open()) throw std::runtime_error("Failed to open file");
-            file >> data;
+
+        if (node.contains("children")) {
+            for (const auto& child : node["children"]) {
+                traverse(child);
+            }
         }
-        
-        fs::path basePath = rootPath.parent_path();
-        if (data.contains("root")) {
-            ParseNode(data["root"], basePath, result, processedFiles);
-        } else {
-            ParseNode(data, basePath, result, processedFiles);
-        }
-    } catch (const std::exception& e) {
-        std::cerr << "[TilesetParser] Error processing " << rootTilesetPath 
-                 << ": " << e.what() << std::endl;
+    };
+
+    if (tilesetJson.contains("root")) {
+        traverse(tilesetJson["root"]);
     }
-    return result;
+
+    return results;
 }
+
+
 
 void TilesetParser::ParseNode(const json& node,
                             const fs::path& basePath,
@@ -72,7 +73,7 @@ void TilesetParser::ProcessContentUrl(const json& content,
 
         const std::string extension = fullPath.extension().string();
 
-        if (extension == ".b3dm") {
+        if (extension == ".b3dm"||extension == ".glb") {
             result.push_back(fullPath.string());
             std::cout << "[Info] Found B3DM: " << fullPath << std::endl;
         } else if (extension == ".json") {
