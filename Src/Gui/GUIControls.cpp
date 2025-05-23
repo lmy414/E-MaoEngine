@@ -45,10 +45,16 @@ void GUIControls::Render()
             entity->transform->rotation = rot;
             entity->transform->MarkDirty();
         }
-    } else {
-        ImGui::TextColored(ImVec4(1,0.3,0.3,1), "没有选择模型!");
-    }
-    ImGui::End();
+        ImGui::SeparatorText("Scale");
+        if (ImGui::DragFloat3("##scale", glm::value_ptr(modelScale), 0.1f, 0.0f, 10.0f, "%.1f"))
+        {
+            entity->transform->scale = modelScale;
+            entity->transform->MarkDirty();
+        }
+        } else {
+            ImGui::TextColored(ImVec4(1,0.3,0.3,1), "没有选择模型!");
+        }
+        ImGui::End();
 
 
         // 帧缓冲显示窗口

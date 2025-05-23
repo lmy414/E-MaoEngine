@@ -199,7 +199,6 @@
     <ClInclude Include="Src\Render\Transform.h" />
     <ClInclude Include="Src\Resources\stb_image.h" />
     <ClInclude Include="Src\Resources\stb_image_write.h" />
-    <ClInclude Include="Src\Resources\stb_impl.h" />
     <ClInclude Include="Src\Resources\tiny_gltf.h" />
     <ClInclude Include="TestResources\Cube.h" />
     <ClInclude Include="TestResources\Geometry.h" />

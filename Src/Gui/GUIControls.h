@@ -16,6 +16,8 @@ public:
     std::weak_ptr<Entity> GetTargetEntity() const { return targetEntity; }
     const glm::vec3& GetTriangleColor() const { return triangleColor; }  // 新增
     glm::vec3 clearColor = {0.2f, 0.3f, 0.3f};    // 默认背景色
+    glm::vec3 modelScale {1.0f}; // 新增缩放变量
+
     
     
     //灯光
@@ -39,6 +41,7 @@ public:
         if (auto t = entity->transform) {
             modelPosition = t->position;
             modelRotation = glm::degrees(glm::eulerAngles(t->rotation)); // 四元数转欧拉角
+            modelScale = t->scale;
         }
     }
     
