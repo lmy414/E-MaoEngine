@@ -146,6 +146,7 @@
     <ClCompile Include="imgui\imgui_tables.cpp" />
     <ClCompile Include="imgui\imgui_widgets.cpp" />
     <ClCompile Include="Src\glad.c" />
+    <ClCompile Include="Src\Gui\DockLayout.cpp" />
     <ClCompile Include="Src\Gui\GUIControls.cpp" />
     <ClCompile Include="Src\Gui\ImGuiManager.cpp" />
     <ClCompile Include="Src\Mian.cpp" />
@@ -255,6 +256,7 @@
     <ClInclude Include="imgui\imstb_textedit.h" />
     <ClInclude Include="imgui\imstb_truetype.h" />
     <ClInclude Include="Src\Core\EndianUtils.h" />
+    <ClInclude Include="Src\Gui\DockLayout.h" />
     <ClInclude Include="Src\Gui\GUIControls.h" />
     <ClInclude Include="Src\Gui\ImGuiManager.h" />
     <ClInclude Include="Src\Render\Camera.h" />
@@ -281,14 +283,7 @@
     <ClInclude Include="TestResources\OBJLoader.h" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Assets\m\011obj.obj" />
-    <Content Include="Assets\m\cs.fbx" />
-    <Content Include="Assets\m\cs2.fbx" />
-    <Content Include="Assets\tex\6-1948-2.png" />
-    <Content Include="Assets\tex\cs2.png" />
-    <Content Include="Assets\tex\cs3.png" />
-  </ItemGroup>
-  <ItemGroup>
+    <Folder Include="Assets\" />
     <Folder Include="Src\Tool\" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -19,7 +19,7 @@ std::vector<std::string> TilesetParser::GetB3DMPaths(const std::string& tilesetP
     traverse = [&](const nlohmann::json& node) {
         if (node.contains("content") && node["content"].contains("uri")) {
             fs::path contentPath = fs::path(tilesetPath).parent_path() / node["content"]["uri"].get<std::string>();
-            results.push_back(contentPath.string());  // ✅ 转换为 string
+            results.push_back(contentPath.string());  // 转换为 string
         }
 
         if (node.contains("children")) {

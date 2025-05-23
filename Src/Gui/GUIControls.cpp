@@ -44,125 +44,144 @@ void GUIControls::ResetModelTransform() {
     }
 }
 
-void GUIControls::Render() {
-    // Scene loading panel
+void GUIControls::Render()
+{ // --------- 全屏主窗口设置 Start ----------
+    // 获取当前平台主视口
+    ImGuiViewport* vp = ImGui::GetMainViewport();
+    // 下次 Begin 的位置和大小
+    ImGui::SetNextWindowPos(vp->WorkPos);
+    ImGui::SetNextWindowSize(vp->WorkSize);
+    //ImGui::SetNextWindowViewport(vp->ID);//兼容问题
+    // 无标题栏、无边框、无缩放、无移动
+    ImGuiWindowFlags flags = 
+          ImGuiWindowFlags_NoTitleBar
+        | ImGuiWindowFlags_NoResize
+        | ImGuiWindowFlags_NoMove
+        | ImGuiWindowFlags_NoCollapse
+        | ImGuiWindowFlags_NoBringToFrontOnFocus
+        | ImGuiWindowFlags_NoNavFocus;
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+    ImGui::Begin("控制中心", nullptr, flags);
+    ImGui::PopStyleVar();
+    // --------- 全屏主窗口设置 End ------------
+
+    // 二列布局：左 250px 宽，右 自适应
+    ImGui::Columns(2);
+    ImGui::SetColumnWidth(0, 250.0f);
+
+    // —— 左侧：竖直一列所有面板 —— 
+    ImGui::BeginChild("##LeftPane", ImVec2(0, 0), true);
+
+    // 1) 加载 & 颜色
+    ImGui::SeparatorText(U8("加载 & 颜色"));
+    if (ImGui::Button(U8("加载 3D Tiles"), ImVec2(-1, 0))) {
+        fileDialog.OpenDialog("ChooseTilesetDlg", U8("选择场景文件"), ".json");
+    }
     if (fileDialog.Display("ChooseTilesetDlg")) {
         if (fileDialog.IsOk()) {
-            std::string tilesetPath = fileDialog.GetFilePathName();
+            std::string path = fileDialog.GetFilePathName();
             try {
-                auto modelPaths = TilesetParser::GetB3DMPaths(tilesetPath);
+                auto modelPaths = TilesetParser::GetB3DMPaths(path);
                 sceneManager->ClearEntities();
-                for (auto& path : modelPaths) {
-                    auto entity = LoadEntityFromFile(path);
-                    sceneManager->AddEntity(entity);
+                for (auto& p : modelPaths) {
+                    auto e = LoadEntityFromFile(p);
+                    if (e) sceneManager->AddEntity(e);
                 }
-                if (auto first = sceneManager->GetFirstEntity()) {
+                if (auto first = sceneManager->GetFirstEntity())
                     SetTargetEntity(first);
-                }
             } catch (const std::exception& e) {
                 ImGui::OpenPopup("加载错误");
-                if (ImGui::BeginPopupModal("加载错误", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-                    ImGui::Text("加载失败: %s", e.what());
-                    if (ImGui::Button("确定")) ImGui::CloseCurrentPopup();
-                    ImGui::EndPopup();
-                }
             }
         }
         fileDialog.Close();
     }
-
-    // Control panel
-    ImGui::Begin(U8("控制面板"));
-    if (ImGui::Button(U8("加载场景"))) {
-        fileDialog.OpenDialog("ChooseTilesetDlg", U8("选择场景文件"), ".json");
+    if (ImGui::BeginPopupModal("加载错误", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::Text("加载失败");
+        if (ImGui::Button("确定")) ImGui::CloseCurrentPopup();
+        ImGui::EndPopup();
     }
     ImGui::ColorEdit3(U8("模型基础色"), glm::value_ptr(triangleColor));
     ImGui::ColorEdit3(U8("背景颜色"), glm::value_ptr(clearColor));
-    ImGui::End();
+    ImGui::Spacing();
 
-    // LOD control
-    ImGui::Begin(U8("LOD 控制"));
+    // 2) LOD 控制
+    ImGui::SeparatorText(U8("LOD 控制"));
     if (lodController) {
-        ImGui::Text(U8("当前顶点数: %zu"), lodController->GetCurrentVertices());
-        ImGui::Text(U8("当前误差: %.4f"), lodController->GetCurrentError());
-        if (ImGui::SliderFloat(U8("简化比例"), &lodRatio, 0.0f, 1.0f, "%.2f")) {
+        ImGui::Text(U8("顶点数: %zu"), lodController->GetCurrentVertices());
+        ImGui::Text(U8("误差: %.4f"), lodController->GetCurrentError());
+        ImGui::SliderFloat(U8("简化比例"), &lodRatio, 0.0f, 1.0f, "%.2f");
+        lodController->SimplifyTo(lodRatio);
+        if (ImGui::Button(U8("重置 LOD"), ImVec2(-1,0))) {
+            lodRatio = 0.0f;
             lodController->SimplifyTo(lodRatio);
         }
-        if (ImGui::SliderFloat(U8("几何权重"), &lodParams.geometry_weight, 0.0f, 1.0f, "%.2f") ||
-            ImGui::SliderFloat(U8("法向权重"), &lodParams.normal_weight, 0.0f, 1.0f, "%.2f") ||
-            ImGui::SliderFloat(U8("UV权重"), &lodParams.uv_weight, 0.0f, 1.0f, "%.2f") ||
-            ImGui::DragInt(U8("每帧最大折叠"), &lodParams.max_collapses_per_frame, 1, 1, 1000) ||
-            ImGui::Checkbox(U8("保持拓扑"), &lodParams.preserve_topology)) {
-            try { lodController->UpdateParameters(lodParams); }
-            catch (const std::exception& e) { ImGui::TextColored(ImVec4(1,0.3f,0.3f,1), "参数更新失败: %s", e.what()); }
-        }
+        ImGui::Spacing();
     } else {
-        ImGui::TextColored(ImVec4(1,0.3f,0.3f,1), U8("未绑定LOD控制器"));
+        ImGui::TextColored(ImVec4(1,0.3f,0.3f,1), U8("未绑定 LOD"));
+        ImGui::Spacing();
     }
-    ImGui::End();
 
-    // Light settings
-    ImGui::Begin(U8("灯光设置"));
+    // 3) 模型变换
+    ImGui::SeparatorText(U8("模型变换"));
+    if (auto e = targetEntity.lock()) {
+        ImGui::Text(U8("顶点: %zu   三角: %zu"),
+                    e->mesh->GetVertices().size(),
+                    e->mesh->GetIndices().size()/3);
+        ImGui::DragFloat3(U8("位置"), glm::value_ptr(modelPosition), 0.1f);
+        ImGui::DragFloat3(U8("旋转"), glm::value_ptr(modelRotation), 1.0f, -180,180);
+        ImGui::DragFloat3(U8("缩放"), glm::value_ptr(modelScale),    0.1f, 0.0f,10.0f,"%.1f");
+        if (ImGui::Button(U8("完全重置"), ImVec2(-1,0))) ResetModelTransform();
+        e->transform->position = modelPosition;
+        e->transform->rotation = glm::quat(glm::radians(modelRotation));
+        e->transform->scale    = modelScale;
+        e->transform->MarkDirty();
+    } else {
+        ImGui::TextColored(ImVec4(1,0.3f,0.3f,1), U8("未选择模型"));
+    }
+    ImGui::Spacing();
+
+    // 4) 灯光设置
+    ImGui::SeparatorText(U8("灯光设置"));
     if (currentLight) {
         ImGui::DragFloat3(U8("方向"), glm::value_ptr(currentLight->direction), 0.1f);
         ImGui::ColorEdit3(U8("颜色"), glm::value_ptr(currentLight->color));
         ImGui::DragFloat(U8("强度"), &currentLight->intensity, 0.1f, 0.0f, 10.0f);
+    } else {
+        ImGui::TextColored(ImVec4(1,0.3f,0.3f,1), U8("未设置灯光"));
     }
-    ImGui::End();
+    ImGui::Spacing();
 
-    // Model transform
-    ImGui::Begin(U8("模型变换"));
-    if (auto entity = targetEntity.lock()) {
-        ImGui::SeparatorText(U8("模型信息"));
-        if (entity->mesh && entity->mesh->IsReady()) {
-            vertexCount = entity->mesh->GetVertices().size();
-            triangleCount = entity->mesh->GetIndices().size()/3;
-            ImGui::Text(U8("顶点数: %zu"), vertexCount);
-            ImGui::Text(U8("三角形数: %zu"), triangleCount);
-        }
-        ImGui::SeparatorText(U8("变换控制"));
-        if (ImGui::Button(U8("完全重置"))) ResetModelTransform();
-        ImGui::SeparatorText(U8("位置"));
-        ImGui::DragFloat3("##pos", glm::value_ptr(modelPosition), 0.1f);
-        ImGui::SeparatorText(U8("旋转"));
-        ImGui::DragFloat3("##rot", glm::value_ptr(modelRotation), 1.0f, -180,180);
-        ImGui::SeparatorText(U8("缩放"));
-        ImGui::DragFloat3("##scale", glm::value_ptr(modelScale), 0.1f,0.0f,10.0f,"%.1f");
-        entity->transform->position = modelPosition;
-        entity->transform->rotation = glm::quat(glm::radians(modelRotation));
-        entity->transform->scale = modelScale;
-        entity->transform->MarkDirty();
+    // 5) 相机控制
+    ImGui::SeparatorText(U8("相机控制"));
+    if (ImGui::Button(U8("重置相机"), ImVec2(-1,0))) {
+        if (onCameraReset) onCameraReset();
     }
-    ImGui::End();
 
-    // Camera control
-    ImGui::Begin(U8("相机控制"));
-    ImGui::SeparatorText(U8("相机操作"));
-    if (ImGui::Button(U8("重置相机"))) {
-        if (onCameraReset) ImGui::OpenPopup(U8("确认重置相机？"));
-        else ImGui::TextColored(ImVec4(1,0.3f,0.3f,1), U8("未设置相机控制器!"));
-    }
-    if (ImGui::BeginPopupModal(U8("确认重置相机？"), nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::Text(U8("确定要重置相机到默认位置吗？"));
-        ImGui::Separator();
-        if (ImGui::Button(U8("确定"))) { onCameraReset(); ImGui::CloseCurrentPopup(); }
-        ImGui::SameLine();
-        if (ImGui::Button(U8("取消"))) ImGui::CloseCurrentPopup();
-        ImGui::EndPopup();
-    }
-    ImGui::End();
+    ImGui::EndChild(); // 结束左侧
 
-    // Framebuffer view
+    // 切换到右侧
+    ImGui::NextColumn();
+
+    // —— 右侧：帧缓冲预览 —— 
+    ImGui::BeginChild("##RightPane", ImVec2(0,0), true);
+    ImGui::SeparatorText(U8("缓冲预览"));
     if (framebufferTexture) {
-        ImGui::Begin(U8("Frame Buffer View"), nullptr, ImGuiWindowFlags_NoScrollbar|ImGuiWindowFlags_NoScrollWithMouse);
         ImVec2 avail = ImGui::GetContentRegionAvail();
         float aspect = float(fbWidth)/float(fbHeight);
         float h = avail.x / aspect;
         if (h > avail.y) { h = avail.y; avail.x = h*aspect; }
-        ImGui::Image((ImTextureID)(intptr_t)framebufferTexture, ImVec2(avail.x,h), ImVec2(0,1), ImVec2(1,0));
-        ImGui::End();
+        ImGui::Image((ImTextureID)(intptr_t)framebufferTexture,
+                     ImVec2(avail.x,h), ImVec2(0,1), ImVec2(1,0));
+    } else {
+        ImGui::TextDisabled(U8("暂无帧缓冲纹理"));
     }
+    ImGui::EndChild();
+
+    ImGui::Columns(1);
+    ImGui::End();
 }
+
+
 
 std::shared_ptr<Entity> GUIControls::LoadEntityFromFile(const std::string& modelPath) {
     namespace fs = std::filesystem;
