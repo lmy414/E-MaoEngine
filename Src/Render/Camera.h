@@ -40,6 +40,7 @@ public:
     void processMouseMovement(float xOffset, float yOffset, bool constrainPitch = true) noexcept;
     void processMouseScroll(float yOffset) noexcept;
     void processPan(float xOffset, float yOffset) noexcept;
+    void reset() noexcept;
 
     // 访问器方法
     [[nodiscard]] const glm::vec3& position() const noexcept { return position_; }
@@ -49,15 +50,19 @@ public:
 
 private:
     void updateVectors() noexcept;
-
+    Configuration config;
     glm::vec3 position_;
     glm::vec3 front_;
     glm::vec3 up_;
     glm::vec3 right_;
     glm::vec3 worldUp_;
+    //默认参数
+    glm::vec3 initialPosition_;
+    float initialYaw_;
+    float initialPitch_;
+    float initialZoom_;
+
     
     float yaw_;
     float pitch_;
-    
-    Configuration config;
 };

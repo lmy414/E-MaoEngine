@@ -85,6 +85,7 @@ int main() {
     Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
     CameraController cameraController(window, camera);
     
+    
     // 初始化场景
     SceneManager scene = InitScene();
     auto mainModel = scene.GetFirstEntity();
@@ -97,14 +98,18 @@ int main() {
                                   mainFramebuffer.width, 
                                   mainFramebuffer.height);
     guiControls.SetTargetEntity(mainModel);
+    guiControls.AddResetCameraCallback([&camera]()
+    {
+        camera.reset(); // 调用Camera的reset方法
+        });
     // 确保材质颜色初始化同步
     if (auto entity = guiControls.GetTargetEntity().lock()) {
         if (auto mat = entity->GetMaterial<DefaultMaterial>()) {
             guiControls.triangleColor = mat->GetColor(); // 双向同步
         }
     }
-    
     guiControls.SetLight(&scene.light); // << 关联场景的灯光对象
+    
     
     // 主渲染循环
     while (!glfwWindowShouldClose(window)) {

@@ -6,9 +6,23 @@ Camera::Camera(glm::vec3 position, glm::vec3 worldUp, float yaw, float pitch) no
     : position_(position),
       worldUp_(glm::normalize(worldUp)),
       yaw_(yaw),
-      pitch_(pitch) {
+      pitch_(pitch),
+      initialPosition_(position),
+      initialYaw_(yaw),
+      initialPitch_(pitch),
+      initialZoom_(config.zoom) // 自动捕获初始zoom值
+{
     updateVectors();
 }
+
+void Camera::reset() noexcept {
+    position_ = initialPosition_;
+    yaw_ = initialYaw_;
+    pitch_ = initialPitch_;
+    config.zoom = initialZoom_;
+    updateVectors();
+}
+
 
 glm::mat4 Camera::getViewMatrix() const noexcept {
     return glm::lookAt(position_, position_ + front_, up_);

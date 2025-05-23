@@ -4,12 +4,19 @@
 #include "../Render/Entity.h"
 #include <GLFW/glfw3.h>
 #include "../../imgui/imgui.h"
+#include <functional>  
 #include "../Render/Light/Light.h"
 #include "../Render/Material/DerivedMaterials.h"
 
+// 定义跨平台兼容宏
+#if defined(__cpp_char8_t) // 检测C++20 char8_t特性
+    #define U8(str) reinterpret_cast<const char*>(u8##str)
+#else
+    #define U8(str) u8##str
+#endif
+
+
 class GUIControls {
-   // glm::vec3 triangleColor = glm::vec3(1.0f); // 新增材质颜色存储
-   // std::weak_ptr<Entity> GetTargetEntity() const { return targetEntity; }
 
 public:
     glm::vec3 triangleColor = glm::vec3(1.0f); // 新增材质颜色存储
@@ -17,8 +24,6 @@ public:
     const glm::vec3& GetTriangleColor() const { return triangleColor; }  // 新增
     glm::vec3 clearColor = {0.2f, 0.3f, 0.3f};    // 默认背景色
     glm::vec3 modelScale {1.0f}; // 新增缩放变量
-
-    
     
     //灯光
     Light* currentLight = nullptr;
@@ -53,4 +58,11 @@ public:
         fbWidth = width;
         fbHeight = height;
     }
+    // 新增重置功能相关成员
+    void ResetModelTransform();
+    void AddResetCameraCallback(std::function<void()> callback) { onCameraReset = callback; }
+    
+private:
+    std::function<void()> onCameraReset; // 相机重置回调
+
 };
