@@ -44,6 +44,19 @@ void GUIControls::Render()
     // 模型变换面板
     ImGui::Begin(U8("模型变换")); 
     if (auto entity = targetEntity.lock()) {
+
+        // 新增模型信息显示 ---------------------------
+        ImGui::SeparatorText(U8("模型信息"));
+        if (entity->mesh && entity->mesh->IsReady()) {
+            vertexCount = entity->mesh->GetVertices().size();
+            triangleCount = entity->mesh->GetIndices().size() / 3;
+            ImGui::Text(U8("顶点数: %zu"), vertexCount);
+            ImGui::Text(U8("三角形数: %zu"), triangleCount);
+        } else {
+            ImGui::TextColored(ImVec4(1,0.3,0.3,1), U8("模型未就绪"));
+        }
+        // -------------------------------------------
+
         // 重置按钮组
         ImGui::SeparatorText(U8("变换控制")); 
         if (ImGui::Button(U8("完全重置"), ImVec2(100, 0))) { 

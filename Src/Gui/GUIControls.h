@@ -24,6 +24,9 @@ public:
     const glm::vec3& GetTriangleColor() const { return triangleColor; }  // 新增
     glm::vec3 clearColor = {0.2f, 0.3f, 0.3f};    // 默认背景色
     glm::vec3 modelScale {1.0f}; // 新增缩放变量
+    size_t vertexCount = 0;
+    size_t triangleCount = 0;
+
     
     //灯光
     Light* currentLight = nullptr;
