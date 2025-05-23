@@ -17,6 +17,13 @@ public:
     }
 
     Light light; // << 新增成员变量
+
+    // 实现ClearEntities (与声明严格一致)
+    void ClearEntities(){ // [!++ 新增实现]
+        entities.clear();
+        //std::cout << "已清除所有场景实体\n"; // 调试输出
+    }
+
     
     void RenderScene(const glm::mat4& view, const glm::mat4& projection) {
         // 计算公共矩阵

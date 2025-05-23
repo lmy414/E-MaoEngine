@@ -3,7 +3,7 @@ namespace fs = std::filesystem;  // 在全局作用域添加
 
 //修改场景初始化函数
 
-SceneManager InitScene() {
+/*SceneManager InitScene() {
     SceneManager scene;
     const std::string base_path = "C:/Users/Mirror/Desktop/3DData/测试用例/";
     const std::string tileset_path = base_path + "tileset.json";
@@ -64,10 +64,7 @@ SceneManager InitScene() {
 
     //std::cout << "[InitScene] 场景初始化完成，实体数量: " << scene.GetEntities().size() << std::endl;
     return scene;
-}
-
-
-
+}*/
 
 int main() {
     
@@ -87,17 +84,17 @@ int main() {
     
     
     // 初始化场景
-    SceneManager scene = InitScene();
-    auto mainModel = scene.GetFirstEntity();
+    SceneManager scene;
     // 初始化ImGui
     ImGuiManager::Init(window);
     
     // 创建GUI控件并关联帧缓冲
     GUIControls guiControls;
+    guiControls.SetSceneManager(&scene); // 关键关联
     guiControls.SetFramebufferInfo(mainFramebuffer.GetTexture(), 
                                   mainFramebuffer.width, 
                                   mainFramebuffer.height);
-    guiControls.SetTargetEntity(mainModel);
+    //guiControls.SetTargetEntity(mainModel);
     guiControls.AddResetCameraCallback([&camera]()
     {
         camera.reset(); // 调用Camera的reset方法

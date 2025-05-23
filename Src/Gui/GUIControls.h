@@ -7,6 +7,10 @@
 #include <functional>  
 #include "../Render/Light/Light.h"
 #include "../Render/Material/DerivedMaterials.h"
+#include "../../imgui/ImGuiFileDialog.h"
+#include "../Render/SceneManager.h"
+#include "../../3Dtiles/B3DMLoader.h"
+#include "../../3Dtiles/TilesetParser.h"
 
 // 定义跨平台兼容宏
 #if defined(__cpp_char8_t) // 检测C++20 char8_t特性
@@ -27,7 +31,8 @@ public:
     size_t vertexCount = 0;
     size_t triangleCount = 0;
 
-    
+    void SetSceneManager(SceneManager* mgr) { sceneManager = mgr; }
+
     //灯光
     Light* currentLight = nullptr;
     void SetLight(Light* light) { 
@@ -67,5 +72,9 @@ public:
     
 private:
     std::function<void()> onCameraReset; // 相机重置回调
+    ImGuiFileDialog fileDialog;
+    std::mutex resourceMutex;
+    SceneManager* sceneManager = nullptr; // 新增场景管理器指针
+    std::shared_ptr<Entity> LoadEntityFromFile(const std::string& modelPath);
 
 };

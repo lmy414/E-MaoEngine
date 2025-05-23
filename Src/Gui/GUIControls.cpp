@@ -17,9 +17,46 @@ void GUIControls::ResetModelTransform()
     }
 }
 void GUIControls::Render()
-{
-    // 引擎控制面板
+{// 文件对话框处理逻辑 ---------------------------------
+    if (fileDialog.Display("ChooseTilesetDlg")) {
+        if (fileDialog.IsOk()) {
+            std::string tilesetPath = fileDialog.GetFilePathName();
+        
+            try {
+                auto modelPaths = TilesetParser::GetB3DMPaths(tilesetPath);
+                sceneManager->ClearEntities();
+            
+                for (const auto& modelPath : modelPaths) {
+                    auto entity = LoadEntityFromFile(modelPath);
+                    sceneManager->AddEntity(entity);
+                }
+            
+                if (auto first = sceneManager->GetFirstEntity()) {
+                    SetTargetEntity(first);
+                }
+            } catch (const std::exception& e) {
+                ImGui::OpenPopup("加载错误");
+                // 错误提示弹窗
+                if (ImGui::BeginPopupModal("加载错误", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+                    ImGui::Text("加载失败: %s", e.what());
+                    if (ImGui::Button("确定")) {
+                        ImGui::CloseCurrentPopup();
+                    }
+                    ImGui::EndPopup();
+                }
+            }
+        }
+        fileDialog.Close();
+
+    }
+    // 在控制面板添加加载按钮 -------------------------------
     ImGui::Begin(U8("控制面板"));  
+    if (ImGui::Button(U8("加载场景"))) {
+        fileDialog.OpenDialog("ChooseTilesetDlg", 
+                            U8("选择场景文件"), 
+                            ".json");
+    }
+    
     
     // 颜色控件参数传递
     if (ImGui::ColorEdit3(U8("模型基础色"), glm::value_ptr(triangleColor))) 
@@ -172,3 +209,37 @@ void GUIControls::Render()
         }
         
     }
+std::shared_ptr<Entity> GUIControls::LoadEntityFromFile(const std::string& modelPath) {
+    // 原InitScene中的模型加载逻辑
+    namespace fs = std::filesystem;
+    
+    if (!fs::exists(modelPath)) {
+        throw std::runtime_error("文件不存在: " + modelPath);
+    }
+    auto ext = fs::path(modelPath).extension().string();
+    std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+    
+    std::shared_ptr<Mesh> mesh;
+    if (ext == ".b3dm") {
+        mesh = std::make_shared<Mesh>(B3DMLoader::LoadFromFile(modelPath));
+    } else if (ext == ".glb") {
+        std::ifstream file(modelPath, std::ios::binary);
+        if (!file) throw std::runtime_error("无法打开文件: " + modelPath);
+        
+        std::vector<uint8_t> data((std::istreambuf_iterator<char>(file)),
+                                std::istreambuf_iterator<char>());
+        mesh = std::make_shared<Mesh>(Mirror::GLTF::GLBParser::Parse(data).ToMesh());
+    } else {
+        throw std::runtime_error("不支持的格式: " + ext);
+    }
+    
+    auto entity = std::make_shared<Entity>();
+    entity->mesh = mesh;
+    entity->transform = std::make_shared<Transform>();
+    entity->transform->position = glm::vec3(0.0f);
+    entity->transform->scale = glm::vec3(1.0f);
+    entity->material = std::make_shared<DefaultMaterial>();
+    entity->name = fs::path(modelPath).stem().string();
+    
+    return entity;
+}
