@@ -163,7 +163,7 @@ void GUIControls::Render()
     ImGui::NextColumn();
 
     // —— 右侧：帧缓冲预览 —— 
-    ImGui::BeginChild("##RightPane", ImVec2(0,0), true);
+    ImGui::BeginChild("##RightPane", ImVec2(1340.0f,1100.0f), true);
     ImGui::SeparatorText(U8("缓冲预览"));
     if (framebufferTexture) {
         ImVec2 avail = ImGui::GetContentRegionAvail();
