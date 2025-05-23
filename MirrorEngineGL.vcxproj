@@ -146,7 +146,6 @@
     <ClCompile Include="imgui\imgui_tables.cpp" />
     <ClCompile Include="imgui\imgui_widgets.cpp" />
     <ClCompile Include="Src\glad.c" />
-    <ClCompile Include="Src\Gui\DockLayout.cpp" />
     <ClCompile Include="Src\Gui\GUIControls.cpp" />
     <ClCompile Include="Src\Gui\ImGuiManager.cpp" />
     <ClCompile Include="Src\Mian.cpp" />
@@ -242,6 +241,7 @@
     <ClInclude Include="3Dtiles\B3DMLoader.h" />
     <ClInclude Include="3Dtiles\GLBParser.h" />
     <ClInclude Include="3Dtiles\GLTF1Parser.h" />
+    <ClInclude Include="3Dtiles\TileNode.h" />
     <ClInclude Include="3Dtiles\TilesetParser.h" />
     <ClInclude Include="imgui\dirent.h" />
     <ClInclude Include="imgui\imconfig.h" />
@@ -256,7 +256,6 @@
     <ClInclude Include="imgui\imstb_textedit.h" />
     <ClInclude Include="imgui\imstb_truetype.h" />
     <ClInclude Include="Src\Core\EndianUtils.h" />
-    <ClInclude Include="Src\Gui\DockLayout.h" />
     <ClInclude Include="Src\Gui\GUIControls.h" />
     <ClInclude Include="Src\Gui\ImGuiManager.h" />
     <ClInclude Include="Src\Render\Camera.h" />
