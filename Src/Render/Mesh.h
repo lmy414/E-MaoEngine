@@ -3,16 +3,13 @@
 #include <vector>
 #include <glm/glm.hpp>
 #include <glad/glad.h>
+#include <glm/gtc/type_ptr.hpp>
+#include <memory>
+#include "ProgressiveLOD.h" // 新增关键包含
+#include "Vertex.h"
 
-struct Vertex {
-    glm::vec3 Position;
-    glm::vec3 Normal;
-    glm::vec2 TexCoords;
-    
-    // 未来扩展其他顶点属性
-    // glm::vec3 Tangent;
-    // glm::vec3 Bitangent;
-};
+
+class ProgressiveLOD; // 前向声明
 
 class Mesh {
 public:
@@ -35,13 +32,18 @@ public:
     
     // 顶点数据处理
     void CalculateNormals();
-    //void UploadToGPU(); 
+    void UpdateGPUData();
     
     // 访问器
     const std::vector<Vertex>& GetVertices() const { return vertices; }
     const std::vector<unsigned int>& GetIndices() const { return indices; }
 
+    std::vector<Vertex>& GetVertices() { return vertices; }
+    std::vector<unsigned int>& GetIndices() { return indices; }
+
+
 private:
+    ProgressiveLOD& GetLODController(); 
     void SetupBuffers();
     void ClearGPUResources();
     void CheckGLError(int line);
@@ -51,7 +53,7 @@ private:
 
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
-    
+    std::unique_ptr<ProgressiveLOD> lod_controller;
     // OpenGL对象
     GLuint VAO = 0;
     GLuint VBO = 0;

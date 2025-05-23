@@ -207,8 +207,8 @@ void GUIControls::Render()
         
             ImGui::End();
         }
-        
     }
+
 std::shared_ptr<Entity> GUIControls::LoadEntityFromFile(const std::string& modelPath) {
     // 原InitScene中的模型加载逻辑
     namespace fs = std::filesystem;

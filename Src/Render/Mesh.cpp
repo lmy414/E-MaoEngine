@@ -28,6 +28,14 @@ Mesh::~Mesh() {
     ClearGPUResources();
 }
 
+// 将内联实现移出头文件到Mesh.cpp中
+ProgressiveLOD& Mesh::GetLODController() {
+    if (!lod_controller) {
+        lod_controller = std::make_unique<ProgressiveLOD>(*this);
+    }
+    return *lod_controller;
+}
+
 // 移动构造函数
 Mesh::Mesh(Mesh&& other) noexcept
     : vertices(std::move(other.vertices)),
@@ -83,13 +91,13 @@ void Mesh::SetupBuffers() {
     // 顶点缓冲
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     CheckGLError(__LINE__);
-    glBufferData(GL_ARRAY_BUFFER, vertexDataSize, vertices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertexDataSize, vertices.data(), GL_DYNAMIC_DRAW);
     CheckGLError(__LINE__);
 
     // 索引缓冲
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     CheckGLError(__LINE__);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexDataSize, indices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexDataSize, indices.data(), GL_DYNAMIC_DRAW);
     CheckGLError(__LINE__);
 
     // 顶点属性配置（使用安全转换）
@@ -212,6 +220,34 @@ void Mesh::ClearGPUResources() {
         EBO = 0;
     }
     isUploaded = false;
+}
+
+
+void Mesh::UpdateGPUData() {
+    if (!IsReady()) {
+        SetupBuffers(); // 首次上传数据
+        return;
+    }
+
+    glBindVertexArray(VAO);
+    CheckGLError(__LINE__);
+
+    // 更新顶点缓冲区
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, 
+                vertices.size() * sizeof(Vertex), 
+                vertices.data(), 
+                GL_DYNAMIC_DRAW); // 修改为动态模式
+
+    // 更新索引缓冲区
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                indices.size() * sizeof(unsigned int),
+                indices.data(),
+                GL_DYNAMIC_DRAW); // 修改为动态模式
+
+    glBindVertexArray(0);
+    isUploaded = true;
 }
 
 // 错误检查函数
