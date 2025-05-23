@@ -2,6 +2,7 @@
 #include "Transform.h"
 #include "Mesh.h"
 #include "../Render/Material/Material.h"
+#include "ProgressiveLOD.h"
 
 class Entity {
 public:
@@ -9,6 +10,7 @@ public:
     std::shared_ptr<Transform> transform = std::make_shared<Transform>();
     std::shared_ptr<Mesh> mesh;
     std::shared_ptr<Material> material;
+    std::shared_ptr<ProgressiveLOD> lodController;  // 新增LOD控制器指针
 
     void Render(const glm::mat4& view, const glm::mat4& projection) const {
         if (!IsRenderable()) return;

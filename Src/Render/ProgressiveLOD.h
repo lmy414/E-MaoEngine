@@ -26,6 +26,10 @@ public:
     size_t GetCurrentVertices() const { return current_vertex_count; }
     float GetCurrentError() const { return current_error; }
 
+    const Parameters& GetParameters() const { return active_params; }
+    void SetParameters(const Parameters& params) { UpdateParameters(params); }
+
+
 private:
     struct EdgeCollapse {
         size_t v1;
