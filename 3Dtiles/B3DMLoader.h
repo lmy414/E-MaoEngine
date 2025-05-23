@@ -5,7 +5,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <cstring>
-#include "Core/EndianUtils.h"
+#include "../Src/Core/EndianUtils.h"
 #include "GLTF1Parser.h"
 #include <filesystem>
 #include "GLBParser.h"  // Assume similar interface for glTF2
