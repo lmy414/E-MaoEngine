@@ -15,6 +15,7 @@
 #include <mutex>
 #include <GLFW/glfw3.h>
 #include "../../imgui/imgui.h"
+#include "../../3Dtiles/TileNode.h"  
 
 #if defined(__cpp_char8_t)
     #define U8(str) reinterpret_cast<const char*>(u8##str)
@@ -28,7 +29,7 @@ public:
     void SetSceneManager(SceneManager* mgr) { sceneManager = mgr; }
     void SetTargetEntity(const std::shared_ptr<Entity>& entity);
     std::weak_ptr<Entity> GetTargetEntity() const { return targetEntity; }
-
+    std::shared_ptr<TileNode> modelTree;  // 用于存储 TileNode 树
     // LOD Controller
     std::shared_ptr<ProgressiveLOD> lodController;
     ProgressiveLOD::Parameters lodParams;

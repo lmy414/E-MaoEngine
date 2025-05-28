@@ -45,14 +45,12 @@ void GUIControls::ResetModelTransform() {
 }
 
 void GUIControls::Render()
-{ // --------- 全屏主窗口设置 Start ----------
-    // 获取当前平台主视口
+{ 
+    // --------- 全屏主窗口设置 Start ----------
     ImGuiViewport* vp = ImGui::GetMainViewport();
-    // 下次 Begin 的位置和大小
     ImGui::SetNextWindowPos(vp->WorkPos);
     ImGui::SetNextWindowSize(vp->WorkSize);
-    //ImGui::SetNextWindowViewport(vp->ID);//兼容问题
-    // 无标题栏、无边框、无缩放、无移动
+    
     ImGuiWindowFlags flags = 
           ImGuiWindowFlags_NoTitleBar
         | ImGuiWindowFlags_NoResize
@@ -67,7 +65,7 @@ void GUIControls::Render()
 
     // 二列布局：左 250px 宽，右 自适应
     ImGui::Columns(2);
-    ImGui::SetColumnWidth(0, 250.0f);
+    ImGui::SetColumnWidth(0, 250.0f); // 设置左侧区域宽度为 250px
 
     // —— 左侧：竖直一列所有面板 —— 
     ImGui::BeginChild("##LeftPane", ImVec2(0, 0), true);
@@ -157,13 +155,27 @@ void GUIControls::Render()
         if (onCameraReset) onCameraReset();
     }
 
+    ImGui::Spacing();
+
+    // —— 显示 TileNode 信息 —— 
+    ImGui::SeparatorText(U8("TileNode 信息"));
+    if (modelTree) {
+        // 直接显示 `modelTree` 中的字段
+        ImGui::Text("Name: %s", modelTree->name.c_str());
+        ImGui::Text("Path: %s", modelTree->path.c_str());
+        ImGui::Text("几何误差: %.4f", modelTree->geometricError);
+    } else {
+        // 如果没有有效的 `modelTree`，显示 "无模型数据"
+        ImGui::Text(U8("无模型数据"));
+    }
+
     ImGui::EndChild(); // 结束左侧
 
     // 切换到右侧
     ImGui::NextColumn();
 
     // —— 右侧：帧缓冲预览 —— 
-    ImGui::BeginChild("##RightPane", ImVec2(1340.0f,1100.0f), true);
+    ImGui::BeginChild("##RightPane", ImVec2(0.0f,0.0f), true);
     ImGui::SeparatorText(U8("缓冲预览"));
     if (framebufferTexture) {
         ImVec2 avail = ImGui::GetContentRegionAvail();
@@ -180,6 +192,7 @@ void GUIControls::Render()
     ImGui::Columns(1);
     ImGui::End();
 }
+
 
 
 
