@@ -75,6 +75,14 @@ private:
     size_t vertexCount = 0;
     size_t triangleCount = 0;
 
+    // FPS tracking
+    float lastTime = 0.0f;
+    float deltaTime = 0.0f;
+    float fps = 0.0f;
+    int frameCount = 0;
+    float fpsUpdateTime = 0.0f;
+    static constexpr float FPS_UPDATE_INTERVAL = 0.5f; // Update FPS every 0.5 seconds
+
     // Framebuffer data
     GLuint framebufferTexture = 0;
     int fbWidth = 0, fbHeight = 0;

@@ -58,17 +58,33 @@ void GUIControls::Render()
         | ImGuiWindowFlags_NoCollapse
         | ImGuiWindowFlags_NoBringToFrontOnFocus
         | ImGuiWindowFlags_NoNavFocus;
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-    ImGui::Begin("控制中心", nullptr, flags);
-    ImGui::PopStyleVar();
-    // --------- 全屏主窗口设置 End ------------
+
+    ImGui::Begin(U8("主界面"), nullptr, flags);
+
+    // 计算FPS
+    float currentTime = static_cast<float>(glfwGetTime());
+    deltaTime = currentTime - lastTime;
+    lastTime = currentTime;
+    
+    frameCount++;
+    fpsUpdateTime += deltaTime;
+    
+    if (fpsUpdateTime >= FPS_UPDATE_INTERVAL) {
+        fps = frameCount / fpsUpdateTime;
+        frameCount = 0;
+        fpsUpdateTime = 0.0f;
+    }
 
     // 二列布局：左 250px 宽，右 自适应
     ImGui::Columns(2);
-    ImGui::SetColumnWidth(0, 250.0f); // 设置左侧区域宽度为 250px
+    ImGui::SetColumnWidth(0, 250.0f);
 
     // —— 左侧：竖直一列所有面板 —— 
     ImGui::BeginChild("##LeftPane", ImVec2(0, 0), true);
+    
+    // 显示FPS
+    ImGui::Text(U8("FPS: %.1f"), fps);
+    ImGui::Separator();
 
     // 1) 加载 & 颜色
     ImGui::SeparatorText(U8("加载 & 颜色"));
@@ -98,11 +114,25 @@ void GUIControls::Render()
         if (ImGui::Button("确定")) ImGui::CloseCurrentPopup();
         ImGui::EndPopup();
     }
-    ImGui::ColorEdit3(U8("模型基础色"), glm::value_ptr(triangleColor));
     ImGui::ColorEdit3(U8("背景颜色"), glm::value_ptr(clearColor));
     ImGui::Spacing();
 
-    // 2) LOD 控制
+    // 2) 材质颜色控制
+    ImGui::SeparatorText(U8("材质颜色"));
+    if (auto entity = targetEntity.lock()) {
+        if (auto material = std::dynamic_pointer_cast<DefaultMaterial>(entity->material)) {
+            if (ImGui::ColorEdit3(U8("模型颜色"), glm::value_ptr(triangleColor))) {
+                material->SetColor(triangleColor);
+            }
+        } else {
+            ImGui::TextColored(ImVec4(1,0.3f,0.3f,1), U8("不支持颜色修改的材质"));
+        }
+    } else {
+        ImGui::TextColored(ImVec4(1,0.3f,0.3f,1), U8("未选择模型"));
+    }
+    ImGui::Spacing();
+
+    // 3) LOD 控制
     ImGui::SeparatorText(U8("LOD 控制"));
     if (lodController) {
         ImGui::Text(U8("顶点数: %zu"), lodController->GetCurrentVertices());
@@ -119,7 +149,7 @@ void GUIControls::Render()
         ImGui::Spacing();
     }
 
-    // 3) 模型变换
+    // 4) 模型变换
     ImGui::SeparatorText(U8("模型变换"));
     if (auto e = targetEntity.lock()) {
         ImGui::Text(U8("顶点: %zu   三角: %zu"),
@@ -138,7 +168,7 @@ void GUIControls::Render()
     }
     ImGui::Spacing();
 
-    // 4) 灯光设置
+    // 5) 灯光设置
     ImGui::SeparatorText(U8("灯光设置"));
     if (currentLight) {
         ImGui::DragFloat3(U8("方向"), glm::value_ptr(currentLight->direction), 0.1f);
@@ -149,7 +179,7 @@ void GUIControls::Render()
     }
     ImGui::Spacing();
 
-    // 5) 相机控制
+    // 6) 相机控制
     ImGui::SeparatorText(U8("相机控制"));
     if (ImGui::Button(U8("重置相机"), ImVec2(-1,0))) {
         if (onCameraReset) onCameraReset();
@@ -160,13 +190,121 @@ void GUIControls::Render()
     // —— 显示 TileNode 信息 —— 
     ImGui::SeparatorText(U8("TileNode 信息"));
     if (modelTree) {
-        // 直接显示 `modelTree` 中的字段
-        ImGui::Text("Name: %s", modelTree->name.c_str());
-        ImGui::Text("Path: %s", modelTree->path.c_str());
-        ImGui::Text("几何误差: %.4f", modelTree->geometricError);
+        // 使用子树形式组织信息，方便展开/折叠
+        if (ImGui::TreeNode(U8("基本信息##basic"))) {
+            ImGui::TextWrapped(U8("名称: %s"), modelTree->name.c_str());
+            ImGui::TextWrapped(U8("路径: %s"), modelTree->GetFormattedPath().c_str());
+            ImGui::Text(U8("几何误差: %.4f"), modelTree->geometricError);
+            ImGui::TreePop();
+        }
+
+        // 变换矩阵信息
+        if (ImGui::TreeNode(U8("变换矩阵##transform"))) {
+            const auto& mat = modelTree->transform;
+            for (int i = 0; i < 4; ++i) {
+                ImGui::Text("[%.2f, %.2f, %.2f, %.2f]",
+                    mat[i][0], mat[i][1], mat[i][2], mat[i][3]);
+            }
+            ImGui::TreePop();
+        }
+
+        // 包围盒信息
+        if (ImGui::TreeNode(U8("包围盒##boundingbox"))) {
+            const auto& bv = modelTree->boundingVolume;
+            ImGui::Text(U8("中心点: (%.2f, %.2f, %.2f)"),
+                bv.center.x, bv.center.y, bv.center.z);
+            ImGui::Text(U8("半尺寸: (%.2f, %.2f, %.2f)"),
+                bv.halfSize.x, bv.halfSize.y, bv.halfSize.z);
+            ImGui::TreePop();
+        }
+
+        // 细化参数
+        if (ImGui::TreeNode(U8("细化参数##refine"))) {
+            const auto& ref = modelTree->refine;
+            ImGui::Text(U8("最小像素尺寸: %.2f"), ref.minimumPixelSize);
+            ImGui::Text(U8("渲染模式: %s"), ref.additive ? U8("加法") : U8("替换"));
+            ImGui::Text(U8("细化方式: %s"), ref.refinement.c_str());
+            ImGui::TreePop();
+        }
+
+        // 内容信息
+        if (ImGui::TreeNode(U8("内容信息##content"))) {
+            const auto& content = modelTree->content;
+            if (!content.uri.empty()) {
+                ImGui::TextWrapped(U8("URI: %s"), content.uri.c_str());
+                ImGui::Text(U8("格式: %s"), content.format.c_str());
+                if (content.byteLength > 0) {
+                    std::string sizeStr;
+                    if (content.byteLength >= 1024 * 1024) {
+                        ImGui::Text(U8("大小: %.2f MB"), content.byteLength / (1024.0 * 1024.0));
+                    } else if (content.byteLength >= 1024) {
+                        ImGui::Text(U8("大小: %.2f KB"), content.byteLength / 1024.0);
+                    } else {
+                        ImGui::Text(U8("大小: %llu B"), content.byteLength);
+                    }
+                }
+            } else {
+                ImGui::TextColored(ImVec4(1,0.3f,0.3f,1), U8("无内容信息"));
+            }
+            ImGui::TreePop();
+        }
+
+        // 子节点信息
+        if (!modelTree->children.empty()) {
+            char label[64];
+            snprintf(label, sizeof(label), U8("子节点列表 (%zu)##children"), modelTree->children.size());
+            if (ImGui::TreeNode(label)) {
+                for (size_t i = 0; i < modelTree->children.size(); i++) {
+                    const auto& child = modelTree->children[i];
+                    char childLabel[64];
+                    snprintf(childLabel, sizeof(childLabel), U8("子节点 %zu##child%zu"), i + 1, i);
+                    if (ImGui::TreeNode(childLabel)) {
+                        // 子节点基本信息
+                        ImGui::TextWrapped(U8("名称: %s"), child->name.c_str());
+                        ImGui::TextWrapped(U8("路径: %s"), child->GetFormattedPath().c_str());
+                        ImGui::Text(U8("几何误差: %.4f"), child->geometricError);
+
+                        // 子节点包围盒
+                        char bvLabel[64];
+                        snprintf(bvLabel, sizeof(bvLabel), U8("包围盒##bv%zu"), i);
+                        if (ImGui::TreeNode(bvLabel)) {
+                            const auto& bv = child->boundingVolume;
+                            ImGui::Text(U8("中心点: (%.2f, %.2f, %.2f)"),
+                                bv.center.x, bv.center.y, bv.center.z);
+                            ImGui::Text(U8("半尺寸: (%.2f, %.2f, %.2f)"),
+                                bv.halfSize.x, bv.halfSize.y, bv.halfSize.z);
+                            ImGui::TreePop();
+                        }
+
+                        // 子节点内容信息
+                        char contentLabel[64];
+                        snprintf(contentLabel, sizeof(contentLabel), U8("内容信息##content%zu"), i);
+                        if (ImGui::TreeNode(contentLabel)) {
+                            const auto& content = child->content;
+                            if (!content.uri.empty()) {
+                                ImGui::TextWrapped(U8("URI: %s"), content.uri.c_str());
+                                ImGui::Text(U8("格式: %s"), content.format.c_str());
+                            } else {
+                                ImGui::TextColored(ImVec4(1,0.3f,0.3f,1), U8("无内容信息"));
+                            }
+                            ImGui::TreePop();
+                        }
+
+                        // 显示孙节点数量
+                        if (!child->children.empty()) {
+                            ImGui::Text(U8("包含 %zu 个子节点"), child->children.size());
+                        }
+
+                        ImGui::TreePop();
+                    }
+                }
+                ImGui::TreePop();
+            }
+        } else {
+            ImGui::Text(U8("无子节点"));
+        }
     } else {
-        // 如果没有有效的 `modelTree`，显示 "无模型数据"
-        ImGui::Text(U8("无模型数据"));
+        ImGui::TextColored(ImVec4(1,0.3f,0.3f,1), U8("无模型数据"));
     }
 
     ImGui::EndChild(); // 结束左侧
@@ -193,30 +331,50 @@ void GUIControls::Render()
     ImGui::End();
 }
 
-
-
-
 std::shared_ptr<Entity> GUIControls::LoadEntityFromFile(const std::string& modelPath) {
     namespace fs = std::filesystem;
-    if (!fs::exists(modelPath)) throw std::runtime_error("文件不存在: " + modelPath);
+    if (!fs::exists(modelPath)) throw std::runtime_error(U8("文件不存在: ") + modelPath);
+    
+    // 创建并设置 TileNode
+    modelTree = std::make_shared<TileNode>();
+    modelTree->name = fs::path(modelPath).stem().string();
+    modelTree->path = modelPath;
+    modelTree->geometricError = 0.0; // 可以根据实际情况设置
+    
     auto ext = fs::path(modelPath).extension().string();
-    std::transform(ext.begin(),ext.end(),ext.begin(),::tolower);
+    std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
     std::shared_ptr<Mesh> mesh;
-    if (ext==".b3dm") mesh = std::make_shared<Mesh>(B3DMLoader::LoadFromFile(modelPath));
-    else if(ext==".glb") {
-        std::ifstream f(modelPath, std::ios::binary);
-        if(!f) throw std::runtime_error("无法打开: "+modelPath);
-        std::vector<uint8_t> d((std::istreambuf_iterator<char>(f)),{});
-        mesh = std::make_shared<Mesh>(Mirror::GLTF::GLBParser::Parse(d).ToMesh());
-    } else throw std::runtime_error("不支持的格式: "+ext);
+    
+    try {
+        if (ext == ".b3dm") {
+            mesh = std::make_shared<Mesh>(B3DMLoader::LoadFromFile(modelPath));
+        } else if (ext == ".glb") {
+            std::ifstream f(modelPath, std::ios::binary);
+            if (!f) throw std::runtime_error(U8("无法打开: ") + modelPath);
+            std::vector<uint8_t> d((std::istreambuf_iterator<char>(f)), {});
+            mesh = std::make_shared<Mesh>(Mirror::GLTF::GLBParser::Parse(d).ToMesh());
+        } else {
+            throw std::runtime_error(U8("不支持的格式: ") + ext);
+        }
+    } catch (const std::exception& e) {
+        modelTree.reset(); // 如果加载失败，清除modelTree
+        throw;
+    }
+    
     auto entity = std::make_shared<Entity>();
     entity->mesh = mesh;
     entity->material = std::make_shared<DefaultMaterial>();
     entity->transform = std::make_shared<Transform>();
     entity->transform->position = glm::vec3(0.0f);
     entity->transform->scale = glm::vec3(1.0f);
-    entity->name = fs::path(modelPath).stem().string();
+    entity->name = modelTree->name;
     entity->lodController = std::make_shared<ProgressiveLOD>(*mesh);
     entity->lodController->Precompute();
+    
+    // 设置初始颜色
+    if (auto material = std::dynamic_pointer_cast<DefaultMaterial>(entity->material)) {
+        material->SetColor(triangleColor);
+    }
+    
     return entity;
 }
