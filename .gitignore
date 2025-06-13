@@ -1,0 +1,28 @@
+﻿# 构建文件
+build/
+out/
+bin/
+*.sln
+*.vcxproj*
+Makefile
+CMakeCache.txt
+cmake_install.cmake
+# IDE 配置
+.vs/
+.idea/
+*.suo
+*.user
+*.opendb
+# 编译产物
+*.obj
+*.pdb
+*.ilk
+*.exe
+*.lib
+*.dll
+*.tlog
+*.log
+*.idb
+# Python 缓存
+__pycache__/
+*.pyc
