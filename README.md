@@ -8,9 +8,7 @@
 ### 前提条件
 1. **CMake 3.15+** - [下载地址](https://cmake.org/download/)
 2. **C++编译器**：
-    - Windows: Visual Studio 2019+ (推荐使用MSVC)
-    - Linux: GCC 9+
-
+    - Windows: Visual Studio 2019+ 
 ### 编译步骤
 
 #### Windows (使用Visual Studio)
