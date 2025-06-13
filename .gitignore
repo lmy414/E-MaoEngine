@@ -7,12 +7,14 @@ bin/
 Makefile
 CMakeCache.txt
 cmake_install.cmake
+
 # IDE 配置
 .vs/
 .idea/
 *.suo
 *.user
 *.opendb
+
 # 编译产物
 *.obj
 *.pdb
@@ -23,6 +25,11 @@ cmake_install.cmake
 *.tlog
 *.log
 *.idb
+
+# 资源缓存
+*.glb
+*.bin
+
 # Python 缓存
 __pycache__/
 *.pyc
