@@ -43,21 +43,6 @@ namespace OpenGLUtils {
 	 */
 	void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
 
-	/**
-	 * @brief 检查并报告OpenGL错误
-	 * @param file 调用位置的源文件名
-	 * @param line 调用位置的行号
-	 * @return 如果有错误返回true
-	 */
-	bool CheckGLError(const char* file, int line);
-
-	/**
-	 * @brief 设置OpenGL调试消息回调
-	 *
-	 * 在调试模式下启用OpenGL调试输出。
-	 */
-	void SetupDebugCallback();
-
 } // namespace OpenGLUtils
 
 // 用于简化OpenGL错误检查的宏

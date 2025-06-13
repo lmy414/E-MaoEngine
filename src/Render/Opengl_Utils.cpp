@@ -46,10 +46,6 @@ namespace OpenGLUtils {
         // …Ë÷√ ”ø⁄
         glViewport(0, 0, width, height);
 
-#ifdef _DEBUG
-        SetupDebugCallback();
-#endif
-
         return window;
     }
 

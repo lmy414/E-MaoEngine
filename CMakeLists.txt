@@ -26,12 +26,23 @@ file(GLOB_RECURSE SOURCE_FILES
 # 添加可执行文件
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 
-# 包含目录
+# 包含目录 - 修复所有头文件路径问题
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/3Dtiles
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/Core
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/Gui
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/Render
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/Render/Light
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/Render/Material
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/Resources
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/TestResources
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/imgui
     ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty
     ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/glfw-master/include
     ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/glm
+    ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/glm/detail
+    ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/glm/gtc
 )
 
 # 链接库
@@ -62,8 +73,19 @@ if(MSVC)
 endif()
 
 # 在Visual Studio中组织文件结构
-file(GLOB_RECURSE HEADER_FILES "include/*.h*")
-file(GLOB_RECURSE SOURCE_FILES_LIST "src/*.cpp")
+file(GLOB_RECURSE HEADER_FILES 
+    "include/*.h*"
+    "include/*/*.h*"
+    "include/*/*/*.h*"
+    "ThirdParty/*.h*"
+    "ThirdParty/*/*.h*"
+)
+file(GLOB_RECURSE SOURCE_FILES_LIST 
+    "src/*.cpp"
+    "src/*/*.cpp"
+    "src/*/*/*.cpp"
+    "include/glad.c"
+)
 source_group("Header Files" FILES ${HEADER_FILES})
 source_group("Source Files" FILES ${SOURCE_FILES_LIST})
 
